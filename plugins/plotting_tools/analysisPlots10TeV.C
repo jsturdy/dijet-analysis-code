@@ -3,7 +3,7 @@ void analysisPlots10TeV(std::string mettype="CaloMET", std::string jettype="Calo
   static const double NUMHISTS  = 23;//23;
   static const double NUMHISTS2 = 6;
   static const double NUMVARS   = 4;
-  static const double NUMFILES  = 7;
+  static const double NUMFILES  = 6;
   static const double localpi  = acos(-1);
 
   TFile* file[NUMFILES];
@@ -28,19 +28,19 @@ void analysisPlots10TeV(std::string mettype="CaloMET", std::string jettype="Calo
   TH1F *hist[NUMFILES][NUMHISTS][NUMVARS];
   TH1F *hist2[NUMFILES][NUMHISTS2][2];
 
-  filenames[0]  = "SUSY_LM0";
-  filenames[1]  = "SUSY_LM1";
-  filenames[2]  = "SUSY_LM5";
-  filenames[3]  = "SM_Background";
-  filenames[4]  = "LQtoCMu_M300";
-  filenames[5]  = "LQtoCMu_M400";
-  filenames[6]  = "LQtoCMu_M500";
+  //filenames[0]  = "SUSY_LM0";
+  filenames[0]  = "SUSY_LM1";
+  //filenames[2]  = "SUSY_LM5";
+  //filenames[3]  = "SM_Background";
+  //filenames[4]  = "LQtoCMu_M300";
+  //filenames[5]  = "LQtoCMu_M400";
+  //filenames[6]  = "LQtoCMu_M500";
 
-  //filenames[1]  = "WJets";
-  //filenames[2]  = "ZJets";
-  //filenames[3]  = "ZInvisibleJets";
-  //filenames[4]  = "TTJets";  
-  //filenames[5]  = "QCD_Background";
+  filenames[1]  = "WJets";
+  filenames[2]  = "ZJets";
+  filenames[3]  = "ZInvisibleJets";
+  filenames[4]  = "TTJets";  
+  filenames[5]  = "QCD_Background";
 
   //filenames[6]  = "VectorBoson";
 
@@ -123,7 +123,7 @@ void analysisPlots10TeV(std::string mettype="CaloMET", std::string jettype="Calo
   linecolor[3] = kOrange+7;//SM
   linecolor[4] = kBlue+3;//LQ to CMu M300
   linecolor[5] = kYellow+3;//LQ to CMu M400
-  linecolor[6] = kBlack+3;//LQ to CMu M400
+  //linecolor[6] = kBlue+8;//LQ to CMu M400
 
   linestyle[0] = 2;
   linestyle[1] = 3;
@@ -131,7 +131,7 @@ void analysisPlots10TeV(std::string mettype="CaloMET", std::string jettype="Calo
   linestyle[3] = 8;
   linestyle[4] = 9;
   linestyle[5] = 10;
-  linestyle[6] = 15;
+  //linestyle[6] = 1;
 
   linewidth = 5;
 
@@ -238,7 +238,7 @@ void analysisPlots10TeV(std::string mettype="CaloMET", std::string jettype="Calo
       leg->Draw();
       char outputimage[128];
       std::string outhistname = histnames[z][tt];
-      sprintf(outputimage,"./%s_%s/%s/%s.jpg",mettype.c_str(),jettype.c_str(),energy.c_str(),outhistname.c_str());
+      sprintf(outputimage,"./%s_%s/%s/%s.ps",mettype.c_str(),jettype.c_str(),energy.c_str(),outhistname.c_str());
       mycanvas[z][tt]->SaveAs(outputimage);}}
       //mycanvas[z][tt]->SaveAs();}}
 
@@ -259,7 +259,7 @@ void analysisPlots10TeV(std::string mettype="CaloMET", std::string jettype="Calo
       leg->Draw();
       char outputimage2[128];
       std::string outhistname2 = histnames2[y][ss];
-      sprintf(outputimage,"./%s_%s/%s/%s.jpg",mettype.c_str(),jettype.c_str(),energy.c_str(),outhistname2.c_str());
+      sprintf(outputimage2,"./%s_%s/%s/%s.ps",mettype.c_str(),jettype.c_str(),energy.c_str(),outhistname2.c_str());
       mycanvas2[y][ss]->SaveAs(outputimage2);}}  
       //mycanvas2[y][ss]->SaveAs();}}  
 }

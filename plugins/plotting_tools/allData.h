@@ -34,7 +34,7 @@ class allData {
   UChar_t         HLT1MET1HT;
   UChar_t         HLT1MUON;
 
-
+  //Gen particle variables
   UInt_t          genN;
   UInt_t          genid[50];//1000
   UInt_t          genMother[50];//1000
@@ -53,7 +53,7 @@ class allData {
   Float_t         genLepPz[50];//100
   UInt_t          genLepStatus[50];//100
 
-
+  //Vertex variables
   UInt_t          nVtx;
   Double_t        VtxChi2[5];
   Double_t        VtxNdof[5];
@@ -65,32 +65,33 @@ class allData {
   Double_t        VtxdY[5]; 
   Double_t        VtxdZ[5];
 
+  //MET variables
   UInt_t          nFullMET;
   UInt_t          nUncorrMET;
 
-  //Double_t        pfMET_fullcorr_nocc[3];
+  Double_t        pfMET_fullcorr_nocc[3];
   //Double_t        pfMET_fullcorr_cc[3];
-  //Double_t        pfMETphi_fullcorr_nocc;
-  //Double_t        pfMET_nocorr_nocc[2];
-  ////Double_t        pfMETphi_nocorr_nocc;
-  //Double_t        pfMET_jeccorr_nocc[2];
-  //Double_t        pfMETphi_jeccorr_nocc;
-  //Double_t        pfMET_muoncorr_nocc[2];
-  //Double_t        pfMETphi_muoncorr_nocc;
-  //Double_t        pfMET_Fullcorr_nocc_significance;
-  //Double_t        GenpfMET[3];
+  Double_t        pfMETphi_fullcorr_nocc;
+  Double_t        pfMET_nocorr_nocc[2];
+  //Double_t        pfMETphi_nocorr_nocc;
+  Double_t        pfMET_jeccorr_nocc[2];
+  Double_t        pfMETphi_jeccorr_nocc;
+  Double_t        pfMET_muoncorr_nocc[2];
+  Double_t        pfMETphi_muoncorr_nocc;
+  Double_t        pfMET_Fullcorr_nocc_significance;
+  Double_t        GenpfMET[3];
 
-//  Double_t        tcMET_fullcorr_nocc[3];
-//  Double_t        tcMET_fullcorr_cc[3];
-//  Double_t        tcMETphi_fullcorr_nocc;
-//  Double_t        tcMET_nocorr_nocc[2];
-//  //Double_t        tcMETphi_nocorr_nocc;
-//  Double_t        tcMET_jeccorr_nocc[2];
-//  Double_t        tcMETphi_jeccorr_nocc;
-//  Double_t        tcMET_muoncorr_nocc[2];
-//  Double_t        tcMETphi_muoncorr_nocc;
-//  Double_t        tcMET_Fullcorr_nocc_significance;
-//  Double_t        GentcMET[3];
+  Double_t        tcMET_fullcorr_nocc[3];
+  //Double_t        tcMET_fullcorr_cc[3];
+  Double_t        tcMETphi_fullcorr_nocc;
+  Double_t        tcMET_nocorr_nocc[2];
+  //Double_t        tcMETphi_nocorr_nocc;
+  Double_t        tcMET_jeccorr_nocc[2];
+  Double_t        tcMETphi_jeccorr_nocc;
+  Double_t        tcMET_muoncorr_nocc[2];
+  Double_t        tcMETphi_muoncorr_nocc;
+  Double_t        tcMET_Fullcorr_nocc_significance;
+  Double_t        GentcMET[3];
 
   Double_t        MET_fullcorr_nocc[3];
   Double_t        MET_fullcorr_cc[3];
@@ -108,7 +109,7 @@ class allData {
   UInt_t          procID;
   Double_t        pthat;
 
-
+  //Hemispheres variables
   UInt_t          Nhemispheres;
   Double_t        HemisphereE[2];
   Double_t        HemisphereEt[2];
@@ -120,6 +121,7 @@ class allData {
   Double_t        Hemispherephi[2];
   Double_t        Hemispheredphi[2];
 
+  //Jet variables
   UInt_t          Njets;
   Double_t        Ht;
   Double_t        MHt;
@@ -138,11 +140,7 @@ class allData {
   Float_t         JetsBTag_TkCountHighEff[50];
   Float_t         JetsBTag_SimpleSecVtx[50];
   Float_t         JetsBTag_CombSecVtx[50];
-  UChar_t         Jet_isccJetAssoc[50];
-  Double_t        Jet_ccJetE[50];
-  Double_t        Jet_ccJetpx[50];
-  Double_t        Jet_ccJetpy[50];
-  Double_t        Jet_ccJetpz[50];
+
   UInt_t          NPFjet;
   Double_t        PFHt;
   Double_t        PFMHt;
@@ -154,7 +152,6 @@ class allData {
   Double_t        PFjetPz[50];
   Double_t        PFjetPt[50];
   Double_t        PFjetCharge[50];
-
 
   Double_t        GenHt;
   Double_t        GenMHt;
@@ -191,31 +188,7 @@ class allData {
   Double_t        GenJetsEta[50];
   Double_t        GenJetsPhi[50];
 	          
-  UInt_t          Nphot;
-  Double_t        PhotEt[50];
-  Double_t        PhotPt[50];
-  Double_t        PhotPx[50];
-  Double_t        PhotPy[50];
-  Double_t        PhotPz[50];
-  Double_t        PhotE[50];
-  Double_t        PhotEta[50];
-  Double_t        PhotPhi[50];
-  Double_t        PhotTrkIso[50];
-  Double_t        PhotECalIso[50];
-  Double_t        PhotHCalIso[50];
-  Double_t        PhotAllIso[50];
-
-  Bool_t          Phot_isccPhotAssoc[50];
-  Bool_t          PhotLooseEM[50];
-  Bool_t          PhotLoosePhoton[50];
-  Bool_t          PhotTightPhoton[50];
-
-  Double_t        GenPhotPdgId[50];
-  Double_t        GenPhotMother[50];
-  Double_t        GenPhotPx[50];
-  Double_t        GenPhotPy[50];
-  Double_t        GenPhotPz[50];
-	          
+  //Electron variables
   UInt_t          Nelec;
   Double_t        ElecEt[50];
   Double_t        ElecPt[50];
@@ -231,7 +204,6 @@ class allData {
   Double_t        ElecAllIso[50];
   Double_t        ElecTrkChiNorm[50];
   Double_t        ElecCharge[50];
-  //MICHELE       
   Double_t        ElecIdLoose[50];
   Double_t        ElecIdTight[50];
   Double_t        ElecIdRobLoose[50];
@@ -263,11 +235,12 @@ class allData {
   Double_t        ElecPinTrk[50];
   Double_t        ElecPoutTrk[50];
   Double_t        ElecNormChi2[50];
-  Bool_t          Elec_isccElecAssoc[50];
+  //  Bool_t          Elec_isccElecAssoc[50];
 
   Double_t        ElecECalIsoDeposit[50];
   Double_t        ElecHCalIsoDeposit[50];
 
+  //Muon variables
   UInt_t          Nmuon;
   Double_t        MuonEt[50];
   Double_t        MuonPt[50];
@@ -291,7 +264,7 @@ class allData {
   Bool_t          MuonTMLastStationTight[50];
   Bool_t          MuonTM2DCompatibilityLoose[50];
   Bool_t          MuonTM2DCompatibilityTight[50];
-  Bool_t          Muon_isccMuonAssoc[50];
+  //  Bool_t          Muon_isccMuonAssoc[50];
 
   Double_t        MuonECalIsoDeposit[50];
   Double_t        MuonHCalIsoDeposit[50];
@@ -341,8 +314,8 @@ class allData {
   Double_t        MuonPairMass;
   UInt_t          MuonPairIndex[2];
 
-  Double_t        AlpPtScale;
-  UInt_t          AlpIdTest;
+  //Double_t        AlpPtScale;
+  //UInt_t          AlpIdTest;
 
   Double_t        MPTPhi;
   Double_t        MPTPx;
@@ -381,29 +354,29 @@ class allData {
   TBranch        *b_nFullMET;
   TBranch        *b_nUncorrMET;
 
-//  TBranch        *b_pfMET_fullcorr_nocc;
-//  TBranch        *b_pfMETphi_fullcorr_nocc;
-//  TBranch        *b_pfMET_fullcorr_cc;
-//  TBranch        *b_pfMET_nocorr_nocc;
-//  //TBranch        *b_pfMETphi_nocorr_nocc;
-//  TBranch        *b_pfMET_jeccorr_nocc;
-//  TBranch        *b_pfMETphi_jeccorr_nocc;
-//  TBranch        *b_pfMET_muoncorr_nocc;
-//  TBranch        *b_pfMETphi_muoncorr_nocc;
-//  TBranch        *b_pfMET_Fullcorr_nocc_significance;
-//  TBranch        *b_pfMET_Gen;
+  TBranch        *b_pfMET_fullcorr_nocc;
+  TBranch        *b_pfMETphi_fullcorr_nocc;
+  //TBranch        *b_pfMET_fullcorr_cc;
+  TBranch        *b_pfMET_nocorr_nocc;
+  //TBranch        *b_pfMETphi_nocorr_nocc;
+  TBranch        *b_pfMET_jeccorr_nocc;
+  TBranch        *b_pfMETphi_jeccorr_nocc;
+  TBranch        *b_pfMET_muoncorr_nocc;
+  TBranch        *b_pfMETphi_muoncorr_nocc;
+  TBranch        *b_pfMET_Fullcorr_nocc_significance;
+  TBranch        *b_pfMET_Gen;
 
-//  TBranch        *b_tcMET_fullcorr_nocc;
-//  TBranch        *b_tcMETphi_fullcorr_nocc;
-//  TBranch        *b_tcMET_fullcorr_cc;
-//  TBranch        *b_tcMET_nocorr_nocc;
-//  //TBranch        *b_tcMETphi_nocorr_nocc;
-//  TBranch        *b_tcMET_jeccorr_nocc;
-//  TBranch        *b_tcMETphi_jeccorr_nocc;
-//  TBranch        *b_tcMET_muoncorr_nocc;
-//  TBranch        *b_tcMETphi_muoncorr_nocc;
-//  TBranch        *b_tcMET_Fullcorr_nocc_significance;
-//  TBranch        *b_tcMET_Gen;
+  TBranch        *b_tcMET_fullcorr_nocc;
+  TBranch        *b_tcMETphi_fullcorr_nocc;
+  //TBranch        *b_tcMET_fullcorr_cc;
+  TBranch        *b_tcMET_nocorr_nocc;
+  //TBranch        *b_tcMETphi_nocorr_nocc;
+  TBranch        *b_tcMET_jeccorr_nocc;
+  TBranch        *b_tcMETphi_jeccorr_nocc;
+  TBranch        *b_tcMET_muoncorr_nocc;
+  TBranch        *b_tcMETphi_muoncorr_nocc;
+  TBranch        *b_tcMET_Fullcorr_nocc_significance;
+  TBranch        *b_tcMET_Gen;
 
   TBranch        *b_MET_fullcorr_nocc;
   TBranch        *b_METphi_fullcorr_nocc;
@@ -461,11 +434,11 @@ class allData {
   TBranch        *b_JetBTag_TkCountHighEff;
   TBranch        *b_JetBTag_SimpleSecVtx;
   TBranch        *b_JetBTag_CombSecVtx;
-  TBranch        *b_Jet_isccJetAssoc;
-  TBranch        *b_Jet_ccJetE;
-  TBranch        *b_Jet_ccJetpx;
-  TBranch        *b_Jet_ccJetpy;
-  TBranch        *b_Jet_ccJetpz;
+  //TBranch        *b_Jet_isccJetAssoc;
+  //TBranch        *b_Jet_ccJetE;
+  //TBranch        *b_Jet_ccJetpx;
+  //TBranch        *b_Jet_ccJetpy;
+  //TBranch        *b_Jet_ccJetpz;
 
   TBranch        *b_GenHt;
   TBranch        *b_GenMHt;
@@ -505,29 +478,29 @@ class allData {
   TBranch        *b_JetTrackPhiWeighted;
   TBranch        *b_JetTrackNo;
 
-  //add photons
-  TBranch        *b_Nphot;
-  TBranch        *b_PhotE;
-  TBranch        *b_PhotEt;
-  TBranch        *b_Photpt;
-  TBranch        *b_Photpx;
-  TBranch        *b_Photpy;
-  TBranch        *b_Photpz;
-  TBranch        *b_Photeta;
-  TBranch        *b_Photphi;
-  TBranch        *b_PhotTrkIso;
-  TBranch        *b_PhotECalIso;
-  TBranch        *b_PhotHCalIso;
-  TBranch        *b_PhotAllIso;
-  TBranch        *b_Phot_isccPhotAssoc;
-  TBranch        *b_PhotLooseEM;
-  TBranch        *b_PhotLoosePhoton;
-  TBranch        *b_PhotTightPhoton;
-  TBranch        *b_PhotGenPdgId;
-  TBranch        *b_PhotGenMother;
-  TBranch        *b_PhotGenPx;
-  TBranch        *b_PhotGenPy;
-  TBranch        *b_PhotGenPz;
+//  //add photons
+//  TBranch        *b_Nphot;
+//  TBranch        *b_PhotE;
+//  TBranch        *b_PhotEt;
+//  TBranch        *b_Photpt;
+//  TBranch        *b_Photpx;
+//  TBranch        *b_Photpy;
+//  TBranch        *b_Photpz;
+//  TBranch        *b_Photeta;
+//  TBranch        *b_Photphi;
+//  TBranch        *b_PhotTrkIso;
+//  TBranch        *b_PhotECalIso;
+//  TBranch        *b_PhotHCalIso;
+//  TBranch        *b_PhotAllIso;
+//  TBranch        *b_Phot_isccPhotAssoc;
+//  TBranch        *b_PhotLooseEM;
+//  TBranch        *b_PhotLoosePhoton;
+//  TBranch        *b_PhotTightPhoton;
+//  TBranch        *b_PhotGenPdgId;
+//  TBranch        *b_PhotGenMother;
+//  TBranch        *b_PhotGenPx;
+//  TBranch        *b_PhotGenPy;
+//  TBranch        *b_PhotGenPz;
  
   //add electrons
   TBranch        *b_Nelec;
@@ -577,7 +550,7 @@ class allData {
   TBranch        *b_ElecGenPx;
   TBranch        *b_ElecGenPy;
   TBranch        *b_ElecGenPz;
-  TBranch        *b_Elec_isccElecAssoc;
+  //  TBranch        *b_Elec_isccElecAssoc;
 
   //add muons
   TBranch        *b_Nmuon;
@@ -640,17 +613,17 @@ class allData {
   TBranch        *b_MuonGenPx;
   TBranch        *b_MuonGenPy;
   TBranch        *b_MuonGenPz;
-  TBranch        *b_Muon_isccMuonAssoc;
+  //  TBranch        *b_Muon_isccMuonAssoc;
 
-  TBranch        *b_AlpPtScale;
-  TBranch        *b_AlpIdTest;
+  //TBranch        *b_AlpPtScale;
+  //TBranch        *b_AlpIdTest;
 
   TBranch        *b_MPTPhi;
   TBranch        *b_MPTPx;
   TBranch        *b_MPTPy;
   TBranch        *b_MPTPz;
 
-  allData(TTree *tree=0, std::string outfilename="outfile.root", double=1, double=1, double=1, double=350, double=0);
+  allData(TTree *tree=0, std::string outfilename="outfile.root", double=1, double=1, double=1, double=350, double=0, std::string metTag="CaloMET", std::string jetTag="CaloJets");
   virtual ~allData();
 
   std::pair<double, double> relpt_mindr(const std::vector<TLorentzVector>& vJetCollection, const TLorentzVector& vLepton);
@@ -667,6 +640,8 @@ class allData {
   Double_t luminosity_, cross_section_, efficiency_;
   std::string outfilename_;
   std::string infilename_;
+  std::string _metLabel;
+  std::string _jetLabel;
 
   Double_t cut_jet1et, cut_jet2et, cut_jet1eta, cut_jet2eta, cut_jet1phi, cut_jet2phi;
   Double_t cut_jet1emfrac[2], cut_jet2emfrac[2], cut_jet12dphi, cut_jet1metdphi;
@@ -679,7 +654,7 @@ class allData {
 #endif
 
 #ifdef allData_cxx
-allData::allData(TTree *tree, std::string outfilename, double luminosity, double cross_section, double efficiency, double met, double mht)
+allData::allData(TTree *tree, std::string outfilename, double luminosity, double cross_section, double efficiency, double met, double mht, std::string metTag, std::string jetTag)
 {
   outfilename_   = outfilename;
   luminosity_    = luminosity;
@@ -687,6 +662,8 @@ allData::allData(TTree *tree, std::string outfilename, double luminosity, double
   efficiency_    = efficiency;
   cut_met        = met;
   cut_mht        = mht;
+  _metLabel      = metTag;
+  _jetLabel      = jetTag;
 
   if (tree == 0) {
     TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("SUSY_LM0_PATtified.root");
@@ -779,29 +756,29 @@ void allData::Init(TTree *tree)
   fChain->SetBranchAddress("nFullMET",             &nFullMET,             &b_nFullMET);
   fChain->SetBranchAddress("nUncorrMET",           &nUncorrMET,           &b_nUncorrMET);
 
-//  fChain->SetBranchAddress("pfMET_fullcorr_nocc",    pfMET_fullcorr_nocc,     &b_pfMET_fullcorr_nocc);
-//  fChain->SetBranchAddress("pfMETphi_fullcorr_nocc", &pfMETphi_fullcorr_nocc, &b_pfMETphi_fullcorr_nocc);
-//  fChain->SetBranchAddress("pfMET_fullcorr_cc",      pfMET_fullcorr_cc,       &b_pfMET_fullcorr_cc);
-//  fChain->SetBranchAddress("pfMET_nocorr_nocc",      pfMET_nocorr_nocc,       &b_pfMET_nocorr_nocc);
-//  //fChain->SetBranchAddress("pfMETphi_nocorr_nocc", &pfMETphi_nocorr_nocc, &b_pfMETphi_nocorr_nocc);
-//  fChain->SetBranchAddress("pfMET_muoncorr_nocc",    pfMET_muoncorr_nocc,     &b_pfMET_muoncorr_nocc);
-//  fChain->SetBranchAddress("pfMETphi_muoncorr_nocc", &pfMETphi_muoncorr_nocc, &b_pfMETphi_muoncorr_nocc);
-//  fChain->SetBranchAddress("pfMET_jeccorr_nocc",     pfMET_jeccorr_nocc,      &b_pfMET_jeccorr_nocc);
-//  fChain->SetBranchAddress("pfMETphi_jeccorr_nocc",  &pfMETphi_jeccorr_nocc,  &b_pfMETphi_jeccorr_nocc);
-//  fChain->SetBranchAddress("GenpfMET",               GenpfMET,                &b_pfMET_Gen);
-//  fChain->SetBranchAddress("pfMET_Fullcorr_nocc_significance", &pfMET_Fullcorr_nocc_significance, &b_pfMET_Fullcorr_nocc_significance);
+  fChain->SetBranchAddress("pfMET_fullcorr_nocc",    pfMET_fullcorr_nocc,     &b_pfMET_fullcorr_nocc);
+  fChain->SetBranchAddress("pfMETphi_fullcorr_nocc", &pfMETphi_fullcorr_nocc, &b_pfMETphi_fullcorr_nocc);
+  //fChain->SetBranchAddress("pfMET_fullcorr_cc",      pfMET_fullcorr_cc,       &b_pfMET_fullcorr_cc);
+  fChain->SetBranchAddress("pfMET_nocorr_nocc",      pfMET_nocorr_nocc,       &b_pfMET_nocorr_nocc);
+  //fChain->SetBranchAddress("pfMETphi_nocorr_nocc", &pfMETphi_nocorr_nocc, &b_pfMETphi_nocorr_nocc);
+  fChain->SetBranchAddress("pfMET_muoncorr_nocc",    pfMET_muoncorr_nocc,     &b_pfMET_muoncorr_nocc);
+  fChain->SetBranchAddress("pfMETphi_muoncorr_nocc", &pfMETphi_muoncorr_nocc, &b_pfMETphi_muoncorr_nocc);
+  fChain->SetBranchAddress("pfMET_jeccorr_nocc",     pfMET_jeccorr_nocc,      &b_pfMET_jeccorr_nocc);
+  fChain->SetBranchAddress("pfMETphi_jeccorr_nocc",  &pfMETphi_jeccorr_nocc,  &b_pfMETphi_jeccorr_nocc);
+  fChain->SetBranchAddress("GenpfMET",               GenpfMET,                &b_pfMET_Gen);
+  fChain->SetBranchAddress("pfMET_Fullcorr_nocc_significance", &pfMET_Fullcorr_nocc_significance, &b_pfMET_Fullcorr_nocc_significance);
 
-//  fChain->SetBranchAddress("tcMET_fullcorr_nocc",    tcMET_fullcorr_nocc,     &b_tcMET_fullcorr_nocc);
-//  fChain->SetBranchAddress("tcMETphi_fullcorr_nocc", &tcMETphi_fullcorr_nocc, &b_tcMETphi_fullcorr_nocc);
-//  //  fChain->SetBranchAddress("tcMET_fullcorr_cc",      tcMET_fullcorr_cc,       &b_tcMET_fullcorr_cc);
-//  fChain->SetBranchAddress("tcMET_nocorr_nocc",      tcMET_nocorr_nocc,       &b_tcMET_nocorr_nocc);
-//  //fChain->SetBranchAddress("tcMETphi_nocorr_nocc", &tcMETphi_nocorr_nocc, &b_tcMETphi_nocorr_nocc);
-//  fChain->SetBranchAddress("tcMET_muoncorr_nocc",    tcMET_muoncorr_nocc,     &b_tcMET_muoncorr_nocc);
-//  fChain->SetBranchAddress("tcMETphi_muoncorr_nocc", &tcMETphi_muoncorr_nocc, &b_tcMETphi_muoncorr_nocc);
-//  fChain->SetBranchAddress("tcMET_jeccorr_nocc",     tcMET_jeccorr_nocc,      &b_tcMET_jeccorr_nocc);
-//  fChain->SetBranchAddress("tcMETphi_jeccorr_nocc",  &tcMETphi_jeccorr_nocc,  &b_tcMETphi_jeccorr_nocc);
-//  fChain->SetBranchAddress("GentcMET",               GentcMET,                &b_tcMET_Gen);
-//  fChain->SetBranchAddress("tcMET_Fullcorr_nocc_significance", &tcMET_Fullcorr_nocc_significance, &b_tcMET_Fullcorr_nocc_significance);
+  fChain->SetBranchAddress("tcMET_fullcorr_nocc",    tcMET_fullcorr_nocc,     &b_tcMET_fullcorr_nocc);
+  fChain->SetBranchAddress("tcMETphi_fullcorr_nocc", &tcMETphi_fullcorr_nocc, &b_tcMETphi_fullcorr_nocc);
+  //  fChain->SetBranchAddress("tcMET_fullcorr_cc",      tcMET_fullcorr_cc,       &b_tcMET_fullcorr_cc);
+  fChain->SetBranchAddress("tcMET_nocorr_nocc",      tcMET_nocorr_nocc,       &b_tcMET_nocorr_nocc);
+  //fChain->SetBranchAddress("tcMETphi_nocorr_nocc", &tcMETphi_nocorr_nocc, &b_tcMETphi_nocorr_nocc);
+  fChain->SetBranchAddress("tcMET_muoncorr_nocc",    tcMET_muoncorr_nocc,     &b_tcMET_muoncorr_nocc);
+  fChain->SetBranchAddress("tcMETphi_muoncorr_nocc", &tcMETphi_muoncorr_nocc, &b_tcMETphi_muoncorr_nocc);
+  fChain->SetBranchAddress("tcMET_jeccorr_nocc",     tcMET_jeccorr_nocc,      &b_tcMET_jeccorr_nocc);
+  fChain->SetBranchAddress("tcMETphi_jeccorr_nocc",  &tcMETphi_jeccorr_nocc,  &b_tcMETphi_jeccorr_nocc);
+  fChain->SetBranchAddress("GentcMET",               GentcMET,                &b_tcMET_Gen);
+  fChain->SetBranchAddress("tcMET_Fullcorr_nocc_significance", &tcMET_Fullcorr_nocc_significance, &b_tcMET_Fullcorr_nocc_significance);
 
   fChain->SetBranchAddress("MET_fullcorr_nocc",    MET_fullcorr_nocc,     &b_MET_fullcorr_nocc);
   fChain->SetBranchAddress("METphi_fullcorr_nocc", &METphi_fullcorr_nocc, &b_METphi_fullcorr_nocc);
@@ -848,11 +825,11 @@ void allData::Init(TTree *tree)
   fChain->SetBranchAddress("JetBTag_TkCountHighEff",JetsBTag_TkCountHighEff,&b_JetBTag_TkCountHighEff);
   fChain->SetBranchAddress("JetBTag_SimpleSecVtx",  JetsBTag_SimpleSecVtx,  &b_JetBTag_SimpleSecVtx);
   fChain->SetBranchAddress("JetBTag_CombSecVtx",    JetsBTag_CombSecVtx,    &b_JetBTag_CombSecVtx);
-  fChain->SetBranchAddress("Jet_isccJetAssoc",  Jet_isccJetAssoc,  &b_Jet_isccJetAssoc);
-  fChain->SetBranchAddress("Jet_ccJetE",  Jet_ccJetE,  &b_Jet_ccJetE);
-  fChain->SetBranchAddress("Jet_ccJetpx", Jet_ccJetpx, &b_Jet_ccJetpx);
-  fChain->SetBranchAddress("Jet_ccJetpy", Jet_ccJetpy, &b_Jet_ccJetpy);
-  fChain->SetBranchAddress("Jet_ccJetpz", Jet_ccJetpz, &b_Jet_ccJetpz);
+//  fChain->SetBranchAddress("Jet_isccJetAssoc",  Jet_isccJetAssoc,  &b_Jet_isccJetAssoc);
+//  fChain->SetBranchAddress("Jet_ccJetE",  Jet_ccJetE,  &b_Jet_ccJetE);
+//  fChain->SetBranchAddress("Jet_ccJetpx", Jet_ccJetpx, &b_Jet_ccJetpx);
+//  fChain->SetBranchAddress("Jet_ccJetpy", Jet_ccJetpy, &b_Jet_ccJetpy);
+//  fChain->SetBranchAddress("Jet_ccJetpz", Jet_ccJetpz, &b_Jet_ccJetpz);
 
   fChain->SetBranchAddress("GenHt",    &GenHt,     &b_GenHt);
   fChain->SetBranchAddress("GenHt",    &GenMHt,    &b_GenMHt);
@@ -880,29 +857,29 @@ void allData::Init(TTree *tree)
   fChain->SetBranchAddress("JetTrackPhiWeighted", JetTrackPhiWeighted, &b_JetTrackPhiWeighted);
   fChain->SetBranchAddress("JetTrackNo",          JetTrackNo,          &b_JetTrackNo);
 
-  fChain->SetBranchAddress("Nphot",      &Nphot,     &b_Nphot);
-  fChain->SetBranchAddress("PhotE",      PhotE,      &b_PhotE);
-  fChain->SetBranchAddress("PhotEt",     PhotEt,     &b_PhotEt);
-  fChain->SetBranchAddress("Photpt",     PhotPt,     &b_Photpt);
-  fChain->SetBranchAddress("Photpx",     PhotPx,     &b_Photpx);
-  fChain->SetBranchAddress("Photpy",     PhotPy,     &b_Photpy);
-  fChain->SetBranchAddress("Photpz",     PhotPz,     &b_Photpz);
-  fChain->SetBranchAddress("Photeta",    PhotEta,    &b_Photeta);
-  fChain->SetBranchAddress("Photphi",    PhotPhi,    &b_Photphi);
-  fChain->SetBranchAddress("PhotTrkIso", PhotTrkIso, &b_PhotTrkIso);
-  fChain->SetBranchAddress("PhotECalIso",PhotECalIso,&b_PhotECalIso);
-  fChain->SetBranchAddress("PhotHCalIso",PhotHCalIso,&b_PhotHCalIso);
-  fChain->SetBranchAddress("PhotAllIso", PhotAllIso, &b_PhotAllIso);
-
-  fChain->SetBranchAddress("Phot_isccPhotAssoc",Phot_isccPhotAssoc,    &b_Phot_isccPhotAssoc);
-  fChain->SetBranchAddress("PhotLooseEM",       PhotLooseEM,           &b_PhotLooseEM);
-  fChain->SetBranchAddress("PhotLoosePhoton",   PhotLoosePhoton,       &b_PhotLoosePhoton);
-  fChain->SetBranchAddress("PhotTightPhoton",   PhotTightPhoton,       &b_PhotTightPhoton);
-  fChain->SetBranchAddress("PhotGenPdgId",      GenPhotPdgId,          &b_PhotGenPdgId);
-  fChain->SetBranchAddress("PhotGenMother",     GenPhotMother,         &b_PhotGenMother);
-  fChain->SetBranchAddress("PhotGenPx",         GenPhotPx,             &b_PhotGenPx);
-  fChain->SetBranchAddress("PhotGenPy",         GenPhotPy,             &b_PhotGenPy);
-  fChain->SetBranchAddress("PhotGenPz",         GenPhotPz,             &b_PhotGenPz);
+//  fChain->SetBranchAddress("Nphot",      &Nphot,     &b_Nphot);
+//  fChain->SetBranchAddress("PhotE",      PhotE,      &b_PhotE);
+//  fChain->SetBranchAddress("PhotEt",     PhotEt,     &b_PhotEt);
+//  fChain->SetBranchAddress("Photpt",     PhotPt,     &b_Photpt);
+//  fChain->SetBranchAddress("Photpx",     PhotPx,     &b_Photpx);
+//  fChain->SetBranchAddress("Photpy",     PhotPy,     &b_Photpy);
+//  fChain->SetBranchAddress("Photpz",     PhotPz,     &b_Photpz);
+//  fChain->SetBranchAddress("Photeta",    PhotEta,    &b_Photeta);
+//  fChain->SetBranchAddress("Photphi",    PhotPhi,    &b_Photphi);
+//  fChain->SetBranchAddress("PhotTrkIso", PhotTrkIso, &b_PhotTrkIso);
+//  fChain->SetBranchAddress("PhotECalIso",PhotECalIso,&b_PhotECalIso);
+//  fChain->SetBranchAddress("PhotHCalIso",PhotHCalIso,&b_PhotHCalIso);
+//  fChain->SetBranchAddress("PhotAllIso", PhotAllIso, &b_PhotAllIso);
+//
+//  fChain->SetBranchAddress("Phot_isccPhotAssoc",Phot_isccPhotAssoc,    &b_Phot_isccPhotAssoc);
+//  fChain->SetBranchAddress("PhotLooseEM",       PhotLooseEM,           &b_PhotLooseEM);
+//  fChain->SetBranchAddress("PhotLoosePhoton",   PhotLoosePhoton,       &b_PhotLoosePhoton);
+//  fChain->SetBranchAddress("PhotTightPhoton",   PhotTightPhoton,       &b_PhotTightPhoton);
+//  fChain->SetBranchAddress("PhotGenPdgId",      GenPhotPdgId,          &b_PhotGenPdgId);
+//  fChain->SetBranchAddress("PhotGenMother",     GenPhotMother,         &b_PhotGenMother);
+//  fChain->SetBranchAddress("PhotGenPx",         GenPhotPx,             &b_PhotGenPx);
+//  fChain->SetBranchAddress("PhotGenPy",         GenPhotPy,             &b_PhotGenPy);
+//  fChain->SetBranchAddress("PhotGenPz",         GenPhotPz,             &b_PhotGenPz);
  
   //add electrons
   fChain->SetBranchAddress("Nelec",  &Nelec, &b_Nelec);
@@ -962,7 +939,7 @@ void allData::Init(TTree *tree)
   fChain->SetBranchAddress("ElecGenPy",    GenElecPy,    &b_ElecGenPy);
   fChain->SetBranchAddress("ElecGenPz",    GenElecPz,    &b_ElecGenPz);
   //PIOPPI
-  fChain->SetBranchAddress("Elec_isccElecAssoc",Elec_isccElecAssoc,&b_Elec_isccElecAssoc);
+  //  fChain->SetBranchAddress("Elec_isccElecAssoc",Elec_isccElecAssoc,&b_Elec_isccElecAssoc);
 
   //add muons
   fChain->SetBranchAddress("Nmuon",         &Nmuon,        &b_Nmuon);  
@@ -1034,7 +1011,7 @@ void allData::Init(TTree *tree)
   fChain->SetBranchAddress("MuonGenPz",    GenMuonPz,    &b_MuonGenPz);
 
   //PIOPPI
-  fChain->SetBranchAddress("Muon_isccMuonAssoc",Muon_isccMuonAssoc,&b_Muon_isccMuonAssoc);
+  //  fChain->SetBranchAddress("Muon_isccMuonAssoc",Muon_isccMuonAssoc,&b_Muon_isccMuonAssoc);
 
   //benedetta : PFjets
   fChain->SetBranchAddress("NPFjet",     &NPFjet,     &b_NPFjet);
@@ -1049,8 +1026,8 @@ void allData::Init(TTree *tree)
   fChain->SetBranchAddress("PFjetPt",    &PFjetPt,    &b_PFjetPt);
   fChain->SetBranchAddress("PFjetCharge",&PFjetCharge,&b_PFjetCharge);
 
-  fChain->SetBranchAddress("AlpPtScale", &AlpPtScale, &b_AlpPtScale);
-  fChain->SetBranchAddress("AlpIdTest",  &AlpIdTest,  &b_AlpIdTest);
+  //fChain->SetBranchAddress("AlpPtScale", &AlpPtScale, &b_AlpPtScale);
+  //fChain->SetBranchAddress("AlpIdTest",  &AlpIdTest,  &b_AlpIdTest);
 
   fChain->SetBranchAddress("MPTPhi", &MPTPhi, &b_MPTPhi);
   fChain->SetBranchAddress("MPTPx",  &MPTPx,  &b_MPTPx);

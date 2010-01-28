@@ -23,10 +23,10 @@
 #include "PhysicsTools/UtilAlgos/interface/TFileService.h"
 
 // SUSY include files
-#include "SusyAnalysis/EventSelector/interface/SusyEventSelector.h"
-#include "SusyAnalysis/EventSelector/interface/SelectorSequence.h"
+//#include "SusyAnalysis/EventSelector/interface/SusyEventSelector.h"
+//#include "SusyAnalysis/EventSelector/interface/SelectorSequence.h"
 
-#include "DataFormats/VertexReco/interface/Vertex.h"
+//#include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
@@ -36,7 +36,7 @@
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "FWCore/Framework/interface/TriggerNames.h"
 
-#include "SusyAnalysis/AnalysisSkeleton/test/ALPGENParticleId.cc"
+//#include "UserCode/AnalysisTools/test/ALPGENParticleId.cc"
 
 //#include "PhysicsTools/Utilities/interface/deltaPhi.h"
 //#include "PhysicsTools/Utilities/interface/deltaR.h"
@@ -85,6 +85,7 @@ private:
   int    processId_;             ///< CSA07 generator process ID
   int run_, event_;
   double jetMaxEta_, jetMinPt_;  /// for preselection cuts on jets and to calculate HT and MHT
+  bool doMCData_;                 /// switch to turn off generator level information
 
   // Counters
   unsigned int nrEventTotalRaw_;          ///< Raw number of events (+1 at each event)
@@ -96,9 +97,18 @@ private:
   // Plots
   TNtuple* ntuple_;      /// Will contain all the selector information we want to keep
   TTree * mAllData;      /// Will contain the additional di-jet specific data
-  TTree * mSelectorData; /// Will contain the information on the selector decisions
-  TTree* decisionTree_;  ///< Will contain all the decisions for ALL processed events
-  TTree* selectionTree_; ///< Will contain all the information we want to keep
+  //TTree * mJetData;
+  //TTree * mMETData;
+  //TTree * mElectronData;
+  //TTree * mMuonData;
+  //TTree * mHLTData;
+  //TTree * mVertexData;
+  //TTree * mMuonData;
+  //TTree * mMuonData;
+
+  //TTree * mSelectorData; /// Will contain the information on the selector decisions
+  //TTree* decisionTree_;  ///< Will contain all the decisions for ALL processed events
+  //TTree* selectionTree_; ///< Will contain all the information we want to keep
   float* variables_;     ///< Container for the tree variables (from selectors)
   bool*  decisions_;     ///< Container for all selector decisions
   bool   globalDec_;     ///< Global decision for event
@@ -317,6 +327,7 @@ private:
   double mTempTreePFjetPz[50];
   double mTempTreePFjetPt[50];
   double mTempTreePFjetCharge[50];
+  double mTempTreePFjetFem[50];
 
   // Generated MET
   double mTempTreepfMET_Gen[3];
@@ -427,9 +438,12 @@ private:
   edm::InputTag tcmetTag_;
   edm::InputTag pfmetTag_;
   edm::InputTag metTag_;
+  //edm::InputTag mhtTag_;
 
   edm::InputTag elecTag_;
   edm::InputTag muonTag_;
+  edm::InputTag pfelecTag_;
+  edm::InputTag pfmuonTag_;
   edm::InputTag genTag_;
 
   //jet tags

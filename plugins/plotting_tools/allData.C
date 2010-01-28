@@ -11,8 +11,9 @@
 
 void allData::Loop() {
   if (fChain == 0) return;
-
-  TFile *file = new TFile(outfilename_.c_str(),"RECREATE");
+  char tmpfile[128];
+  sprintf(tmpfile,"%s_%s_%s",_metLabel.c_str(),_jetLabel.c_str(),outfilename_.c_str());
+  TFile *file = new TFile(tmpfile,"RECREATE");
   file->cd();
   //if ( outfilename_.find("LQ")!=std::string::npos ) 
   //  cout<<"Sampling a leptoquark sample"<<endl;
@@ -36,7 +37,20 @@ void allData::Loop() {
   fChain->SetBranchStatus("VertexdY",1);
   fChain->SetBranchStatus("VertexdZ",1);
 
+  //Hemispheres information
+  fChain->SetBranchStatus("Nhemispheres",1);
+  fChain->SetBranchStatus("HemisphereE",1);
+  fChain->SetBranchStatus("HemisphereEt",1);
+  fChain->SetBranchStatus("Hemispherepx",1);
+  fChain->SetBranchStatus("Hemispherepy",1);
+  fChain->SetBranchStatus("Hemispherepz",1);
+  fChain->SetBranchStatus("Hemispherept",1);
+  fChain->SetBranchStatus("Hemisphereeta",1);
+  fChain->SetBranchStatus("Hemispherephi",1);
+  fChain->SetBranchStatus("Hemispheredphi",1);
+
   //jet information
+  //Calo Jets
   fChain->SetBranchStatus("Njets",1);
   fChain->SetBranchStatus("Jetpx",1);
   fChain->SetBranchStatus("Jetpy",1);
@@ -47,11 +61,6 @@ void allData::Loop() {
   fChain->SetBranchStatus("Jetphi",1);
   fChain->SetBranchStatus("Jeteta",1);
   fChain->SetBranchStatus("JetFem",1);
-  fChain->SetBranchStatus("Jet_isccJetAssoc",1);
-  fChain->SetBranchStatus("Jet_ccJetE",1);
-  fChain->SetBranchStatus("Jet_ccJetpx",1);
-  fChain->SetBranchStatus("Jet_ccJetpy",1);
-  fChain->SetBranchStatus("Jet_ccJetpz",1);
   fChain->SetBranchStatus("Jet_MCcorrFactor",1);
   fChain->SetBranchStatus("Jet_JPTcorrFactor",1);
   fChain->SetBranchStatus("JetBTag_TkCountHighEff",1);
@@ -60,45 +69,7 @@ void allData::Loop() {
   fChain->SetBranchStatus("Ht",1);
   fChain->SetBranchStatus("MHt",1);
 
-  fChain->SetBranchStatus("nFullMET",1);
-  fChain->SetBranchStatus("nUncorrMET",1);
-  //  fChain->SetBranchStatus("pfMET_fullcorr_cc",1);
-  //  fChain->SetBranchStatus("pfMET_fullcorr_nocc",1);
-  //  fChain->SetBranchStatus("pfMET_jeccorr_nocc",1);
-  //  fChain->SetBranchStatus("pfMET_muoncorr_nocc",1);
-  //  fChain->SetBranchStatus("pfMET_nocorr_nocc",1);
-  //  fChain->SetBranchStatus("pfMETphi_fullcorr_nocc",1);
-  //  fChain->SetBranchStatus("pfMETphi_jeccorr_nocc",1);
-  //  fChain->SetBranchStatus("pfMETphi_muoncorr_nocc",1);
-  //  //fChain->SetBranchStatus("METphi_nocorr_nocc",1);
-
-  ////  fChain->SetBranchStatus("tcMET_fullcorr_cc",1);
-  //  fChain->SetBranchStatus("tcMET_fullcorr_nocc",1);
-  //  fChain->SetBranchStatus("tcMET_jeccorr_nocc",1);
-  //  fChain->SetBranchStatus("tcMET_muoncorr_nocc",1);
-  //  fChain->SetBranchStatus("tcMET_nocorr_nocc",1);
-  //  fChain->SetBranchStatus("tcMETphi_fullcorr_nocc",1);
-  //  fChain->SetBranchStatus("tcMETphi_jeccorr_nocc",1);
-  //  fChain->SetBranchStatus("tcMETphi_muoncorr_nocc",1);
-
-  fChain->SetBranchStatus("MET_fullcorr_cc",1);
-  fChain->SetBranchStatus("MET_fullcorr_nocc",1);
-  fChain->SetBranchStatus("MET_jeccorr_nocc",1);
-  fChain->SetBranchStatus("MET_muoncorr_nocc",1);
-  fChain->SetBranchStatus("MET_nocorr_nocc",1);
-  fChain->SetBranchStatus("METphi_fullcorr_nocc",1);
-  fChain->SetBranchStatus("METphi_jeccorr_nocc",1);
-  fChain->SetBranchStatus("METphi_muoncorr_nocc",1);
-
-  //fChain->SetBranchStatus("GenpfMET",1);
-  //  fChain->SetBranchStatus("GentcMET",1);
-  fChain->SetBranchStatus("GenMET",1);
-  fChain->SetBranchStatus("MPTPhi",1);
-  fChain->SetBranchStatus("MPTPx",1);
-  fChain->SetBranchStatus("MPTPy",1);
-  fChain->SetBranchStatus("MPTPz",1);
-
-  //pf jet information
+  //PF Jets
   fChain->SetBranchStatus("NPFjet",1);
   fChain->SetBranchStatus("PFHt",1);
   fChain->SetBranchStatus("PFMHt",1);
@@ -110,6 +81,52 @@ void allData::Loop() {
   fChain->SetBranchStatus("PFjetPz",1);
   fChain->SetBranchStatus("PFjetPt",1);
   fChain->SetBranchStatus("PFjetCharge",1);
+
+  //MET information
+  //PF MET
+  fChain->SetBranchStatus("nFullMET",1);
+  fChain->SetBranchStatus("nUncorrMET",1);
+
+  //fChain->SetBranchStatus("pfMET_fullcorr_cc",1);
+  fChain->SetBranchStatus("pfMET_fullcorr_nocc",1);
+  fChain->SetBranchStatus("pfMET_jeccorr_nocc",1);
+  fChain->SetBranchStatus("pfMET_muoncorr_nocc",1);
+  fChain->SetBranchStatus("pfMET_nocorr_nocc",1);
+  fChain->SetBranchStatus("pfMETphi_fullcorr_nocc",1);
+  fChain->SetBranchStatus("pfMETphi_jeccorr_nocc",1);
+  fChain->SetBranchStatus("pfMETphi_muoncorr_nocc",1);
+  //fChain->SetBranchStatus("pfMETphi_nocorr_nocc",1);
+
+  //Track corrected MET
+  //  fChain->SetBranchStatus("tcMET_fullcorr_cc",1);
+  fChain->SetBranchStatus("tcMET_fullcorr_nocc",1);
+  fChain->SetBranchStatus("tcMET_jeccorr_nocc",1);
+  fChain->SetBranchStatus("tcMET_muoncorr_nocc",1);
+  fChain->SetBranchStatus("tcMET_nocorr_nocc",1);
+  fChain->SetBranchStatus("tcMETphi_fullcorr_nocc",1);
+  fChain->SetBranchStatus("tcMETphi_jeccorr_nocc",1);
+  fChain->SetBranchStatus("tcMETphi_muoncorr_nocc",1);
+
+  //Calo MET
+  fChain->SetBranchStatus("MET_fullcorr_cc",1);
+  fChain->SetBranchStatus("MET_fullcorr_nocc",1);
+  fChain->SetBranchStatus("MET_jeccorr_nocc",1);
+  fChain->SetBranchStatus("MET_muoncorr_nocc",1);
+  fChain->SetBranchStatus("MET_nocorr_nocc",1);
+  fChain->SetBranchStatus("METphi_fullcorr_nocc",1);
+  fChain->SetBranchStatus("METphi_jeccorr_nocc",1);
+  fChain->SetBranchStatus("METphi_muoncorr_nocc",1);
+  fChain->SetBranchStatus("METphi_muoncorr_nocc",1);
+
+  //Gen level MET
+  fChain->SetBranchStatus("GenpfMET",1);
+  fChain->SetBranchStatus("GentcMET",1);
+  fChain->SetBranchStatus("GenMET",1);
+  //MPT information
+  fChain->SetBranchStatus("MPTPhi",1);
+  fChain->SetBranchStatus("MPTPx",1);
+  fChain->SetBranchStatus("MPTPy",1);
+  fChain->SetBranchStatus("MPTPz",1);
 
   //electron information
   fChain->SetBranchStatus("Nelec",1);
@@ -141,9 +158,8 @@ void allData::Loop() {
   fChain->SetBranchStatus("MuonECalIso",1);
   fChain->SetBranchStatus("MuonHCalIso",1);
 
-  fChain->SetBranchStatus("AlpPtScale",1);
-  fChain->SetBranchStatus("AlpIdTest",1);
-
+  //fChain->SetBranchStatus("AlpPtScale",1);
+  //fChain->SetBranchStatus("AlpIdTest",1);
 
   double localpi  = acos(-1);
   TH1F *h_selections[2];
@@ -217,8 +233,8 @@ void allData::Loop() {
 
   double binsize = 0.;
 
-  for (unsigned int tt = 0; tt < 4; ++tt) {
-    for (unsigned int hh = 0; hh < NUMHISTOS; ++hh) {
+  for (int tt = 0; tt < 4; ++tt) {
+    for (int hh = 0; hh < NUMHISTOS; ++hh) {
       sprintf(histtitle[hh],"%s%s",histpre[tt].c_str(),histname[hh].c_str());
     }
 
@@ -316,16 +332,13 @@ void allData::Loop() {
   cut_meff = 0.;
 
   cut_elecpt = 15.0;
-  cut_muonpt = 10.0;
-  //cut_tauet  = 20.0;
+  cut_muonpt = 15.0;
 
-  cut_eleceta = 2.5;
+  cut_eleceta = 2.4;
   cut_muoneta = 2.4;
-  //cut_taueta  = 2.0;
 
   cut_eleciso = 0.5;
   cut_muoniso = 0.1;
-  //cut_taueta  = 2.0;
   
   // values to go into the selection table
   int  pscounter      = 0;
@@ -338,50 +351,146 @@ void allData::Loop() {
   //
   
   for (Long64_t jentry=0; jentry<nentries;++jentry) {
-
+    
     Long64_t ientry = LoadTree(jentry);
+
     if (ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb; // nb = number of bytes read
-    
     double METx   = 0.;
     double METy   = 0.;
 
-    double genMETx   = GenMET[0];
-    double genMETy   = GenMET[1];
-    double genMET    = sqrt(genMETx*genMETx + genMETy*genMETy);
-    double genMETphi = atan2(genMETx,genMETy);
+    double genMETx   = 0.;
+    double genMETy   = 0.;
+    double genMET    = 0.;
+    double genMETphi = 0.;
+    
+    if(_metLabel=="CaloMET") {
+      genMETx   = GenMET[0];
+      genMETy   = GenMET[1];
+      
+      if (outfilename_.find("LQ")!=std::string::npos) {
+	METx   = MET_jeccorr_nocc[0];//uses JE corrections, but not muons (for LQ samples)
+	METy   = MET_jeccorr_nocc[1];//uses JE corrections, but not muons (for LQ samples)
+      }
+      else {
+	METx   = MET_fullcorr_nocc[0];//uses full muon/JE corrections
+	METy   = MET_fullcorr_nocc[1];//uses full muon/JE corrections
+      }
+    }
+    else if (_metLabel=="pfMET") {
+      genMETx   = GenpfMET[0];
+      genMETy   = GenpfMET[1];
+      
+      if (outfilename_.find("LQ")!=std::string::npos) {
+	METx   = pfMET_jeccorr_nocc[0];//uses JE corrections, but not muons (for LQ samples)
+	METy   = pfMET_jeccorr_nocc[1];//uses JE corrections, but not muons (for LQ samples)
+      }
+      else {
+	METx   = pfMET_fullcorr_nocc[0];//uses full muon/JE corrections
+	METy   = pfMET_fullcorr_nocc[1];//uses full muon/JE corrections
+      }
+    }
+    else if (_metLabel=="tcMET") {
+      genMETx   = GentcMET[0];
+      genMETy   = GentcMET[1];
+      
+      if (outfilename_.find("LQ")!=std::string::npos) {
+	METx   = tcMET_jeccorr_nocc[0];//uses JE corrections, but not muons (for LQ samples)
+	METy   = tcMET_jeccorr_nocc[1];//uses JE corrections, but not muons (for LQ samples)
+      }
+      else {
+	METx   = tcMET_fullcorr_nocc[0];//uses full muon/JE corrections
+	METy   = tcMET_fullcorr_nocc[1];//uses full muon/JE corrections
+      }
+    }
 
-    //    if (outfilename_.find("LQ")!=std::string::npos) {
-    //      METx   = MET_jeccorr_nocc[0];//uses JE corrections, but not muons (for LQ samples)
-    //      METy   = MET_jeccorr_nocc[1];//uses JE corrections, but not muons (for LQ samples)
-    //    }
-    //    else {
-    METx   = MET_fullcorr_nocc[0];//uses full muon/JE corrections
-    METy   = MET_fullcorr_nocc[1];//uses full muon/JE corrections
-    //    }
+    genMET    = sqrt(genMETx*genMETx + genMETy*genMETy);
+    genMETphi = atan2(genMETx,genMETy);
+
+    double MET    = sqrt( METx*METx + METy*METy );
+    double METphi = atan2(METx,METy);
+    
+    //printf("type   phi    MEx    MEy\n");
+    //printf("full:  %2.2f  %2.2f   %2.2f\n",METphi_fullcorr_nocc,MET_fullcorr_nocc[0],MET_fullcorr_nocc[1]);
+    //printf("muon:  %2.2f  %2.2f   %2.2f\n",METphi_muoncorr_nocc,MET_muoncorr_nocc[0],MET_muoncorr_nocc[1]);
+    ////printf("none:  %2.2f  %2.2f   %2.2f\n",METphi_nocorr_nocc,MET_nocorr_nocc[0],MET_nocorr_nocc[1]);
+    //printf("JEC:   %2.2f  %2.2f   %2.2f\n",METphi_jeccorr_nocc,MET_jeccorr_nocc[0],MET_jeccorr_nocc[1]);
+    
+    std::vector<double> tmpJetpx;
+    std::vector<double> tmpJetpy;
+    std::vector<double> tmpJetpt;
+    std::vector<double> tmpJetEt;
+    std::vector<double> tmpJeteta;
+    std::vector<double> tmpJetphi;
+    std::vector<double> tmpJetFem;
+
+    int    tmpNjets = Njets;  //default to calo jet info
+    double tmpHt    = Ht;     //default to calo jet info
+    double tmpMHt   = MHt;    //default to calo jet info
 
     double jet12dphi = 0, jet1metdphi = 0, jet2metdphi = 0;
-    double MET    = sqrt( METx*METx + METy*METy );
+
+    if (_jetLabel=="CaloJets") {
+      tmpNjets = Njets;
+      tmpHt    = Ht;
+      tmpMHt   = MHt;
+
+      if(tmpNjets>0){
+	tmpJetpx.resize(tmpNjets);
+	tmpJetpy.resize(tmpNjets);
+	tmpJetpt.resize(tmpNjets);
+	tmpJetEt.resize(tmpNjets);
+	tmpJeteta.resize(tmpNjets);
+	tmpJetphi.resize(tmpNjets);
+	tmpJetFem.resize(tmpNjets);
+      
+	for (int ijet = 0; ijet < tmpNjets; ++ijet) {
+	  tmpJetpx.at(ijet)  = Jetpx[ijet];
+	  tmpJetpy.at(ijet)  = Jetpy[ijet];
+	  tmpJetpt.at(ijet)  = Jetpt[ijet];
+	  tmpJetEt.at(ijet)  = JetEt[ijet];
+	  tmpJeteta.at(ijet) = Jeteta[ijet];
+	  tmpJetphi.at(ijet) = Jetphi[ijet];
+	  tmpJetFem.at(ijet) = JetFem[ijet];
+	}
+      }
+    }
     
-    //    printf("type   phi    MEx    MEy\n");
-    //    printf("full:  %2.2f  %2.2f   %2.2f\n",METphi_fullcorr_nocc,MET_fullcorr_nocc[0],MET_fullcorr_nocc[1]);
-    //    printf("muon:  %2.2f  %2.2f   %2.2f\n",METphi_muoncorr_nocc,MET_muoncorr_nocc[0],MET_muoncorr_nocc[1]);
-    //    printf("none:  %2.2f  %2.2f   %2.2f\n",METphi_nocorr_nocc,MET_nocorr_nocc[0],MET_nocorr_nocc[1]);
-    //    printf("JEC:   %2.2f  %2.2f   %2.2f\n",METphi_jeccorr_nocc,MET_jeccorr_nocc[0],MET_jeccorr_nocc[1]);
+    else if (_jetLabel=="pfJets") {
+      tmpNjets = NPFjet;
+      tmpHt    = PFHt;
+      tmpMHt   = PFMHt;
+
+      if(tmpNjets>0){
+	tmpJetpx.resize(tmpNjets);
+	tmpJetpy.resize(tmpNjets);
+	tmpJetpt.resize(tmpNjets);
+	tmpJetEt.resize(tmpNjets);
+	tmpJeteta.resize(tmpNjets);
+	tmpJetphi.resize(tmpNjets);
+	tmpJetFem.resize(tmpNjets);
+      }
+      
+      for (int ijet = 0; ijet < tmpNjets; ++ijet) {
+	tmpJetpx.at(ijet)  = PFjetPx[ijet];
+	tmpJetpy.at(ijet)  = PFjetPy[ijet];
+	tmpJetpt.at(ijet)  = PFjetPt[ijet];
+	tmpJetEt.at(ijet)  = PFjetPt[ijet];
+	tmpJeteta.at(ijet) = PFjetEta[ijet];
+	tmpJetphi.at(ijet) = PFjetPhi[ijet];
+	tmpJetFem.at(ijet) = 0.5;//PFjetCharge[ijet];//kludge until i figure something else out
+      }
+    }
 
 
-    jet12dphi   = Jetphi[0]-Jetphi[1];
+    if (tmpNjets>0){
+      jet12dphi   = tmpJetphi[0]-tmpJetphi[1];
+      jet1metdphi = tmpJetphi[0]-METphi;//uses JE corrections, but not muons (for LQ samples)
+      jet2metdphi = tmpJetphi[1]-METphi;//uses JE corrections, but not muons (for LQ samples)
+    }
+    
     jet12dphi   = (jet12dphi<0)?-jet12dphi:jet12dphi;
     jet12dphi   = (jet12dphi>localpi)?2*localpi - jet12dphi:jet12dphi;
-
-    //    if ( outfilename_.find("LQ")!=std::string::npos ) {
-    //      jet1metdphi = Jetphi[0]-METphi_jeccorr_nocc;//uses full muon/JE corrections
-    //      jet2metdphi = Jetphi[1]-METphi_jeccorr_nocc;//uses full muon/JE corrections                      
-    //    }
-    //    else {
-    jet1metdphi = Jetphi[0]-METphi_fullcorr_nocc;//uses JE corrections, but not muons (for LQ samples)
-    jet2metdphi = Jetphi[1]-METphi_fullcorr_nocc;//uses JE corrections, but not muons (for LQ samples)
-    //      }
 
     jet1metdphi = (jet1metdphi<0)?-jet1metdphi:jet1metdphi;
     jet1metdphi = (jet1metdphi>localpi)?2*localpi - jet1metdphi:jet1metdphi;
@@ -430,38 +539,38 @@ void allData::Loop() {
     bool electronVeto[2]    = {true,true};
     bool muonVeto[2]        = {true,true};
     
-    nJetSelection[0]    = (Njets>=cut_njet)      ? true : false;
+    nJetSelection[0]    = (tmpNjets>=cut_njet)      ? true : false;
+    if(nVtx==0) preselection = false;
+
+    if (tmpNjets>0) jet1EtSelection[0]  = (tmpJetpt[0]>=cut_jet1et) ? true : false;
+    if (tmpNjets>1) jet2EtSelection[0]  = (tmpJetpt[1]>=cut_jet2et) ? true : false;
+
+    if (tmpNjets>0) jet1EtaSelection[0] = (fabs(tmpJeteta[0])<=cut_jet1eta)   ? true : false;
+    if (tmpNjets>1) jet2EtaSelection[0] = (fabs(tmpJeteta[1])<=cut_jet2eta)   ? true : false;
+
+    if (tmpNjets>0) jet1EMFracSelection[0] = ((tmpJetFem[0]>=cut_jet1emfrac[0])&&(tmpJetFem[0]<=cut_jet1emfrac[1])) ? true : false;
+    if (tmpNjets>1) jet2EMFracSelection[0] = ((tmpJetFem[1]>=cut_jet2emfrac[0])&&(tmpJetFem[1]<=cut_jet2emfrac[1])) ? true : false;
     
+    if (tmpNjets>1) jet12dphiSelection[0]   = (jet12dphi>=cut_jet12dphi)     ? true : false;
 
-    if (Njets>0) jet1EtSelection[0]  = (Jetpt[0]>=cut_jet1et) ? true : false;
-    if (Njets>1) jet2EtSelection[0]  = (Jetpt[1]>=cut_jet2et) ? true : false;
-
-    if (Njets>0) jet1EtaSelection[0] = (fabs(Jeteta[0])<=cut_jet1eta)   ? true : false;
-    if (Njets>1) jet2EtaSelection[0] = (fabs(Jeteta[1])<=cut_jet2eta)   ? true : false;
-
-    if (Njets>0) jet1EMFracSelection[0] = ((JetFem[0]>=cut_jet1emfrac[0])&&(JetFem[0]<=cut_jet1emfrac[1])) ? true : false;
-    if (Njets>1) jet2EMFracSelection[0] = ((JetFem[1]>=cut_jet2emfrac[0])&&(JetFem[1]<=cut_jet2emfrac[1])) ? true : false;
-    
-    if (Njets>1) jet12dphiSelection[0]   = (jet12dphi>=cut_jet12dphi)     ? true : false;
-
-    if (Njets>0) jet1metdphiSelection[0] = (jet1metdphi>=cut_jet1metdphi) ? true : false;
-    if (Njets>1) jet2metdphiSelection[0] = (jet2metdphi>=cut_jet2metdphi) ? true : false;
+    if (tmpNjets>0) jet1metdphiSelection[0] = (jet1metdphi>=cut_jet1metdphi) ? true : false;
+    if (tmpNjets>1) jet2metdphiSelection[0] = (jet2metdphi>=cut_jet2metdphi) ? true : false;
 
     metSelection[0]   = (MET>=cut_met)   ? true : false;
-    htSelection[0]    = (Ht>=cut_ht)     ? true : false;
-    mhtSelection[0]   = (MHt>=cut_mht)   ? true : false;
+    htSelection[0]    = (tmpHt>=cut_ht)     ? true : false;
+    mhtSelection[0]   = (tmpMHt>=cut_mht)   ? true : false;
 
     UInt_t goodjetcount = 0;
 
-    if (Njets>0) goodjetcount +=1;
-    if (Njets>1) goodjetcount +=1;
+    if (tmpNjets>0) goodjetcount +=1;
+    if (tmpNjets>1) goodjetcount +=1;
     
-    for (unsigned int ijet = 0; ijet < Njets; ++ijet) {
-      if (Jeteta[ijet]>cut_alljeteta || JetFem[ijet]<cut_jetemfrac[0] || JetFem[ijet]>cut_jetemfrac[1])
+    for (int ijet = 0; ijet < tmpNjets; ++ijet) {
+      if (tmpJeteta[ijet]<cut_alljeteta || tmpJetFem[ijet]<cut_jetemfrac[0] || tmpJetFem[ijet]>cut_jetemfrac[1])
 	preselection = false;}
 
-    for (unsigned int ijet = 2; ijet < Njets; ++ijet) {
-      if (Jetpt[ijet]>cut_alljetet) 
+    for (int ijet = 2; ijet < tmpNjets; ++ijet) {
+      if (tmpJetpt[ijet]>cut_alljetet) 
 	excessiveJetVeto[0] = false;
       else
 	++goodjetcount;}
@@ -484,17 +593,21 @@ void allData::Loop() {
 	}
     }
 
-    double Meff    = Ht + MHt;
+    double Meff    = tmpHt + tmpMHt;
 
-    double tmpMT   = (JetEt[0]+JetEt[1])*(JetEt[0]+JetEt[1]); 
-    tmpMT         -= (Jetpx[0]+Jetpx[1])*(Jetpx[0]+Jetpx[1]);
-    tmpMT         -= (Jetpy[0]+Jetpy[1])*(Jetpy[0]+Jetpy[1]);
-    double MT      = sqrt(tmpMT);//Jetpt[0]+Jetpt[1];
+    double tmpMT   = 0;
+    if(tmpNjets>0){
+      tmpMT          = (tmpJetEt[0]+tmpJetEt[1])*(tmpJetEt[0]+tmpJetEt[1]); 
+      tmpMT         -= (tmpJetpx[0]+tmpJetpx[1])*(tmpJetpx[0]+tmpJetpx[1]);
+      tmpMT         -= (tmpJetpy[0]+tmpJetpy[1])*(tmpJetpy[0]+tmpJetpy[1]);}
+    double MT      = sqrt(tmpMT);//tmpJetpt[0]+tmpJetpt[1];
 
-    double tmpMinv = (JetEt[0]+JetEt[1])*(JetEt[0]+JetEt[1]);
-    tmpMinv       -= (Jetpx[0]+Jetpx[1])*(Jetpx[0]+Jetpx[1]);
-    tmpMinv       -= (Jetpy[0]+Jetpy[1])*(Jetpy[0]+Jetpy[1]);
-    tmpMinv       -= (Jetpz[0]+Jetpz[1])*(Jetpz[0]+Jetpz[1]);
+    double tmpMinv = 0;
+    if(tmpNjets>0){
+      tmpMinv        = (tmpJetEt[0]+tmpJetEt[1])*(tmpJetEt[0]+tmpJetEt[1]);
+      tmpMinv       -= (tmpJetpx[0]+tmpJetpx[1])*(tmpJetpx[0]+tmpJetpx[1]);
+      tmpMinv       -= (tmpJetpy[0]+tmpJetpy[1])*(tmpJetpy[0]+tmpJetpy[1]);
+      tmpMinv       -= (Jetpz[0]+Jetpz[1])*(Jetpz[0]+Jetpz[1]);}
     double Minv    = sqrt(tmpMinv);
     
     meffSelection[0]  = (Meff>=cut_meff) ? true : false;
@@ -518,21 +631,21 @@ void allData::Loop() {
 	fjcounter++;
 	if (dphiselection) {
 	  dphicounter++;
-	  if (leptonveto) {
-	    leptoncounter++;
-	    if (htselection) {
-	      htcounter++;
-	      if (metselection) {
-		metcounter++;
+	  if (metselection) {
+	    metcounter++;
+	    if (leptonveto) {
+	      leptoncounter++;
+	      if (htselection) {
+		htcounter++;
 		if (mhtselection) {
 		  mhtcounter++;}}}}}}}
-    
     
     nJetSelection[1] = jet1EtSelection[0]&&jet2EtSelection[0]&&
       jet1EtaSelection[0]&&jet2EtaSelection[0]&&
       jet1EMFracSelection[0]&&jet2EMFracSelection[0]&&
       jet1metdphiSelection[0]&&jet2metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       excessiveJetVeto[0]&&jet12dphiSelection[0]&&
       electronVeto[0]&&muonVeto[0];
     
@@ -541,7 +654,8 @@ void allData::Loop() {
       jet1EtaSelection[0]&&jet2EtaSelection[0]&&
       jet1EMFracSelection[0]&&jet2EMFracSelection[0]&&
       jet1metdphiSelection[0]&&jet2metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       excessiveJetVeto[0]&&jet12dphiSelection[0]&&
       electronVeto[0]&&muonVeto[0];
     
@@ -550,7 +664,8 @@ void allData::Loop() {
       jet1EtaSelection[0]&&jet2EtaSelection[0]&&
       jet1EMFracSelection[0]&&jet2EMFracSelection[0]&&
       jet1metdphiSelection[0]&&jet2metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       excessiveJetVeto[0]&&jet12dphiSelection[0]&&
       electronVeto[0]&&muonVeto[0];
     
@@ -559,7 +674,8 @@ void allData::Loop() {
       jet2EtaSelection[0]&&
       jet1EMFracSelection[0]&&jet2EMFracSelection[0]&&
       jet1metdphiSelection[0]&&jet2metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       excessiveJetVeto[0]&&jet12dphiSelection[0]&&
       electronVeto[0]&&muonVeto[0];
     
@@ -568,7 +684,8 @@ void allData::Loop() {
       jet1EtaSelection[0]&&
       jet1EMFracSelection[0]&&jet2EMFracSelection[0]&&
       jet1metdphiSelection[0]&&jet2metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       excessiveJetVeto[0]&&jet12dphiSelection[0]&&
       electronVeto[0]&&muonVeto[0];
     
@@ -577,7 +694,8 @@ void allData::Loop() {
       jet1EtaSelection[0]&&jet2EtaSelection[0]&&
       jet2EMFracSelection[0]&&jet1metdphiSelection[0]&&
       jet2metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       excessiveJetVeto[0]&&jet12dphiSelection[0]&&
       electronVeto[0]&&muonVeto[0];
     
@@ -586,7 +704,8 @@ void allData::Loop() {
       jet1EtaSelection[0]&&jet2EtaSelection[0]&&
       jet1EMFracSelection[0]&&
       jet1metdphiSelection[0]&&jet2metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       excessiveJetVeto[0]&&jet12dphiSelection[0]&&
       electronVeto[0]&&muonVeto[0];
     
@@ -595,7 +714,8 @@ void allData::Loop() {
       jet1EtaSelection[0]&&jet2EtaSelection[0]&&
       jet1EMFracSelection[0]&&jet2EMFracSelection[0]&&
       jet2metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       excessiveJetVeto[0]&&jet12dphiSelection[0]&&
       electronVeto[0]&&muonVeto[0];
     
@@ -604,7 +724,8 @@ void allData::Loop() {
       jet1EtaSelection[0]&&jet2EtaSelection[0]&&
       jet1EMFracSelection[0]&&jet2EMFracSelection[0]&&
       jet1metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       excessiveJetVeto[0]&&jet12dphiSelection[0]&&
       electronVeto[0]&&muonVeto[0];
 
@@ -649,7 +770,8 @@ void allData::Loop() {
       jet1EtaSelection[0]&&jet2EtaSelection[0]&&
       jet1EMFracSelection[0]&&jet2EMFracSelection[0]&&
       jet1metdphiSelection[0]&&jet2metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       jet12dphiSelection[0]&&
       electronVeto[0]&&muonVeto[0];
 
@@ -658,7 +780,8 @@ void allData::Loop() {
       jet1EtaSelection[0]&&jet2EtaSelection[0]&&
       jet1EMFracSelection[0]&&jet2EMFracSelection[0]&&
       jet1metdphiSelection[0]&&jet2metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       excessiveJetVeto[0]&&
       electronVeto[0]&&muonVeto[0];
 
@@ -667,7 +790,8 @@ void allData::Loop() {
       jet1EtaSelection[0]&&jet2EtaSelection[0]&&
       jet1EMFracSelection[0]&&jet2EMFracSelection[0]&&
       jet1metdphiSelection[0]&&jet2metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       excessiveJetVeto[0]&&jet12dphiSelection[0]&&muonVeto[0];
 
     muonVeto[1] = nJetSelection[0]&&
@@ -675,32 +799,33 @@ void allData::Loop() {
       jet1EtaSelection[0]&&jet2EtaSelection[0]&&
       jet1EMFracSelection[0]&&jet2EMFracSelection[0]&&
       jet1metdphiSelection[0]&&jet2metdphiSelection[0]&&
-      metSelection[0]&&mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
+      metSelection[0]&&
+      mhtSelection[0]&&htSelection[0]&&meffSelection[0]&&
       excessiveJetVeto[0]&&jet12dphiSelection[0]&&electronVeto[0];
 
 
     ////////////////////////////////////
     //pre cut plots
     ////////////////////////////////////
-    h_Njets[0][0]->Fill(Njets);
+    h_Njets[0][0]->Fill(tmpNjets);
     
-    if (Njets>0) {
-      h_jet1et[0]->Fill(Jetpt[0]);
-      h_jet1eta[0]->Fill(Jeteta[0]);
-      h_jet1emfrac[0]->Fill(JetFem[0]);
-      h_jet1phi[0]->Fill(Jetphi[0]);}
-    if (Njets>1) {
-      h_jet2et[0]->Fill(Jetpt[1]);
-      h_jet2eta[0]->Fill(Jeteta[1]);
-      h_jet2emfrac[0]->Fill(JetFem[1]);
-      h_jet2phi[0]->Fill(Jetphi[1]);}
-    if (Njets>1) {
+    if (tmpNjets>0) {
+      h_jet1et[0]->Fill(tmpJetpt[0]);
+      h_jet1eta[0]->Fill(tmpJeteta[0]);
+      h_jet1emfrac[0]->Fill(tmpJetFem[0]);
+      h_jet1phi[0]->Fill(tmpJetphi[0]);}
+    if (tmpNjets>1) {
+      h_jet2et[0]->Fill(tmpJetpt[1]);
+      h_jet2eta[0]->Fill(tmpJeteta[1]);
+      h_jet2emfrac[0]->Fill(tmpJetFem[1]);
+      h_jet2phi[0]->Fill(tmpJetphi[1]);}
+    if (tmpNjets>1) {
       h_MT[0]->Fill(MT);
       h_Minv[0]->Fill(Minv);}
-    unsigned int ijet = 2;
-    while (ijet < Njets) {
-      h_jetFem[0]->Fill(JetFem[ijet]);
-      h_jetallet[0]->Fill(Jetpt[ijet]);
+    int ijet = 2;
+    while (ijet < tmpNjets) {
+      h_jetFem[0]->Fill(tmpJetFem[ijet]);
+      h_jetallet[0]->Fill(tmpJetpt[ijet]);
       ijet++;}
     
     h_Njets[0][1]->Fill(goodjetcount);
@@ -709,13 +834,13 @@ void allData::Loop() {
     h_jet2metdphi[0]->Fill(jet2metdphi);
     
     h_MET[0]->Fill(MET);
-    h_HT[0]->Fill(Ht);
-    h_MHT[0]->Fill(MHt);
+    h_HT[0]->Fill(tmpHt);
+    h_MHT[0]->Fill(tmpMHt);
     h_Meff[0]->Fill(Meff);
 
-    if (Njets>1) h_jet12dphi[0]->Fill(sqrt((Jetphi[0]-Jetphi[1])*(Jetphi[0]-Jetphi[1])));
+    if (tmpNjets>1) h_jet12dphi[0]->Fill(sqrt((tmpJetphi[0]-tmpJetphi[1])*(tmpJetphi[0]-tmpJetphi[1])));
         
-    h_METphi[0]->Fill(METphi_fullcorr_nocc);
+    //h_METphi[0]->Fill(METphi_fullcorr_nocc);
 
     for (unsigned int ielec = 0; ielec < Nelec; ++ielec) {
       if (ElecPt[ielec]>cut_elecpt&&ElecEta[ielec]<cut_eleceta) 
@@ -738,15 +863,15 @@ void allData::Loop() {
     ////////////////////////////////////
 
     if(nJetSelection[0]) {
-      h_Njets[1][0]->Fill(Njets);
+      h_Njets[1][0]->Fill(tmpNjets);
       h_selections[0]->Fill(0.5);}
     
     if(jet1EtSelection[0]) {
-      h_jet1et[1]->Fill(Jetpt[0]);
+      h_jet1et[1]->Fill(tmpJetpt[0]);
       h_selections[0]->Fill(1.5);}
 
     if(jet2EtSelection[0]) {
-      h_jet2et[1]->Fill(Jetpt[1]);
+      h_jet2et[1]->Fill(tmpJetpt[1]);
       h_selections[0]->Fill(2.5);}
 
     if(metSelection[0]) {
@@ -754,11 +879,11 @@ void allData::Loop() {
       h_selections[0]->Fill(9.5);}
 
     if(htSelection[0]) {
-      h_HT[1]->Fill(Ht);
+      h_HT[1]->Fill(tmpHt);
       h_selections[0]->Fill(10.5);}
 
     if(mhtSelection[0]) {
-      h_MHT[1]->Fill(MHt);
+      h_MHT[1]->Fill(tmpMHt);
       h_selections[0]->Fill(11.5);}
 
     if(meffSelection[0]) {
@@ -766,31 +891,31 @@ void allData::Loop() {
       h_selections[0]->Fill(12.5);}
 
     if(jet1EtaSelection[0]) {
-      h_jet1eta[1]->Fill(Jeteta[0]);
+      h_jet1eta[1]->Fill(tmpJeteta[0]);
       h_selections[0]->Fill(3.5);}
 
     if(jet2EtaSelection[0]) {
-      h_jet2eta[1]->Fill(Jeteta[1]);
+      h_jet2eta[1]->Fill(tmpJeteta[1]);
       h_selections[0]->Fill(4.5);}
 
     if(jet1EMFracSelection[0]) {
-      h_jet1emfrac[1]->Fill(JetFem[0]);
+      h_jet1emfrac[1]->Fill(tmpJetFem[0]);
       h_selections[0]->Fill(5.5);}
 
     if(jet2EMFracSelection[0]) {
-      h_jet2emfrac[1]->Fill(JetFem[1]);
+      h_jet2emfrac[1]->Fill(tmpJetFem[1]);
       h_selections[0]->Fill(6.5);}
     
 
     ijet = 2;
-    while (ijet < Njets) {
-      if (Jetpt[ijet]>cut_minjetet) h_jetFem[1]->Fill(JetFem[ijet]);
+    while (ijet < tmpNjets) {
+      if (tmpJetpt[ijet]>cut_minjetet) h_jetFem[1]->Fill(tmpJetFem[ijet]);
       ijet++;}
     
     if(excessiveJetVeto[0]) {
       ijet = 2;
-      while (ijet < Njets) {
-	if (Jetpt[ijet]>cut_minjetet) h_jetallet[1]->Fill(Jetpt[ijet]);
+      while (ijet < tmpNjets) {
+	if (tmpJetpt[ijet]>cut_minjetet) h_jetallet[1]->Fill(tmpJetpt[ijet]);
 	ijet++;}
       h_Njets[1][1]->Fill(goodjetcount);
       h_selections[0]->Fill(14.5);}
@@ -833,7 +958,7 @@ void allData::Loop() {
       h_selections[0]->Fill(8.5);}
     
     if(jet12dphiSelection[0]) {
-      h_jet12dphi[1]->Fill(sqrt((Jetphi[0]-Jetphi[1])*(Jetphi[0]-Jetphi[1])));
+      h_jet12dphi[1]->Fill(sqrt((tmpJetphi[0]-tmpJetphi[1])*(tmpJetphi[0]-tmpJetphi[1])));
       h_selections[0]->Fill(13.5);}
     
     ///////////////////////////////////////////
@@ -841,31 +966,31 @@ void allData::Loop() {
     //////////////////////////////////////////
 
     if(nJetSelection[1]) {
-      h_Njets[2][0]->Fill(Njets);
+      h_Njets[2][0]->Fill(tmpNjets);
       h_selections[1]->Fill(0.5);}
     
     if(jet1EtSelection[1]) {
-      h_jet1et[2]->Fill(Jetpt[0]);
+      h_jet1et[2]->Fill(tmpJetpt[0]);
       h_selections[1]->Fill(1.5);}
 
     if(jet2EtSelection[1]) {
-      h_jet2et[2]->Fill(Jetpt[1]);
+      h_jet2et[2]->Fill(tmpJetpt[1]);
       h_selections[1]->Fill(2.5);}
 
     if(jet1EtaSelection[1]) {
-      h_jet1eta[2]->Fill(Jeteta[0]);
+      h_jet1eta[2]->Fill(tmpJeteta[0]);
       h_selections[1]->Fill(3.5);}
 
     if(jet2EtaSelection[1]) {
-      h_jet2eta[2]->Fill(Jeteta[1]);
+      h_jet2eta[2]->Fill(tmpJeteta[1]);
       h_selections[1]->Fill(4.5);}
 
     if(jet1EMFracSelection[1]) {
-      h_jet1emfrac[2]->Fill(JetFem[0]);
+      h_jet1emfrac[2]->Fill(tmpJetFem[0]);
       h_selections[1]->Fill(5.5);}
 
     if(jet2EMFracSelection[1]) {
-      h_jet2emfrac[2]->Fill(JetFem[1]);
+      h_jet2emfrac[2]->Fill(tmpJetFem[1]);
       h_selections[1]->Fill(6.5);}
         
     if(jet1metdphiSelection[1]) {
@@ -881,11 +1006,11 @@ void allData::Loop() {
       h_selections[1]->Fill(9.5);}
 
     if(htSelection[1]) {
-      h_HT[2]->Fill(Ht);
+      h_HT[2]->Fill(tmpHt);
       h_selections[1]->Fill(10.5);}
 
     if(mhtSelection[1]) {
-      h_MHT[2]->Fill(MHt);
+      h_MHT[2]->Fill(tmpMHt);
       h_selections[1]->Fill(11.5);}
 
     if(meffSelection[1]) {
@@ -893,21 +1018,21 @@ void allData::Loop() {
       h_selections[1]->Fill(12.5);}
 
     if(jet12dphiSelection[1]) {
-      h_jet12dphi[2]->Fill(sqrt((Jetphi[0]-Jetphi[1])*(Jetphi[0]-Jetphi[1])));
+      h_jet12dphi[2]->Fill(sqrt((tmpJetphi[0]-tmpJetphi[1])*(tmpJetphi[0]-tmpJetphi[1])));
       h_selections[1]->Fill(13.5);}
     
     ijet = 2;
-    while (ijet < Njets) {
-      if (Jetpt[ijet]>cut_minjetet) h_jetFem[2]->Fill(JetFem[ijet]);
+    while (ijet < tmpNjets) {
+      if (tmpJetpt[ijet]>cut_minjetet) h_jetFem[2]->Fill(tmpJetFem[ijet]);
       ijet++;}
 
     if(excessiveJetVeto[1]) {
       ijet = 2;
-      while (ijet < Njets) {
-	if (Jetpt[ijet]>cut_minjetet) h_jetallet[2]->Fill(Jetpt[ijet]);
+      while (ijet < tmpNjets) {
+	if (tmpJetpt[ijet]>cut_minjetet) h_jetallet[2]->Fill(tmpJetpt[ijet]);
 	ijet++;}
       h_Njets[2][1]->Fill(goodjetcount);
-      //h_HT[2]->Fill(Ht);//what to do about recalculating HT when some jets are rejected?
+      //h_HT[2]->Fill(tmpHt);//what to do about recalculating HT when some jets are rejected?
       h_selections[1]->Fill(14.5);}
     
     if(electronVeto[1]) {
@@ -939,8 +1064,8 @@ void allData::Loop() {
       jet1EtaSelection[0]&&jet2EtaSelection[0]&&
       jet1EMFracSelection[0]&&jet2EMFracSelection[0]&&
       jet1metdphiSelection[0]&&jet2metdphiSelection[0]&&
-      jet12dphiSelection[0]&&metSelection[0]&&htSelection[0]&&
-      mhtSelection[0]&&meffSelection[0]&&
+      jet12dphiSelection[0]&&metSelection[0]&&
+      htSelection[0]&&mhtSelection[0]&&meffSelection[0]&&
       electronVeto[0]&&muonVeto[0];
 
     if (selections) {
@@ -950,30 +1075,30 @@ void allData::Loop() {
       //}
 
       h_selections[0]->Fill(17.5);
-      h_Njets[3][0]->Fill(Njets);
+      h_Njets[3][0]->Fill(tmpNjets);
       
       h_MT[1]->Fill(MT);
       h_Minv[1]->Fill(Minv);
 
-      h_jet1et[3]->Fill(Jetpt[0]);
-      h_jet2et[3]->Fill(Jetpt[1]);
+      h_jet1et[3]->Fill(tmpJetpt[0]);
+      h_jet2et[3]->Fill(tmpJetpt[1]);
 
       h_MET[3]->Fill(MET);
-      h_MHT[3]->Fill(MHt);
-      h_HT[3]->Fill(Ht);
+      h_MHT[3]->Fill(tmpMHt);
+      h_HT[3]->Fill(tmpHt);
       h_Meff[3]->Fill(Meff);
 
-      for (unsigned int ijet = 2; ijet < Njets; ++ijet) {
-	if (Jetpt[ijet]>cut_minjetet) {
-	  h_jetFem[3]->Fill(JetFem[ijet]);
-	  h_jetallet[3]->Fill(Jetpt[ijet]);}}
+      for (int ijet = 2; ijet < tmpNjets; ++ijet) {
+	if (tmpJetpt[ijet]>cut_minjetet) {
+	  h_jetFem[3]->Fill(tmpJetFem[ijet]);
+	  h_jetallet[3]->Fill(tmpJetpt[ijet]);}}
 
       h_Njets[3][1]->Fill(goodjetcount);
 
-      h_jet1eta[3]->Fill(Jeteta[0]);
-      h_jet2eta[3]->Fill(Jeteta[1]);
-      h_jet1emfrac[3]->Fill(JetFem[0]);
-      h_jet2emfrac[3]->Fill(JetFem[1]);
+      h_jet1eta[3]->Fill(tmpJeteta[0]);
+      h_jet2eta[3]->Fill(tmpJeteta[1]);
+      h_jet1emfrac[3]->Fill(tmpJetFem[0]);
+      h_jet2emfrac[3]->Fill(tmpJetFem[1]);
 
       //total number of photons/leptons in event
       for (unsigned int ielec = 0; ielec < Nelec; ++ielec) {
@@ -1005,17 +1130,18 @@ void allData::Loop() {
       //	muoncount++;}
       //h_Nmuon[3]->Fill(muoncount);
       
-      h_jet12dphi[3]->Fill(sqrt((Jetphi[0]-Jetphi[1])*(Jetphi[0]-Jetphi[1])));      
+      h_jet12dphi[3]->Fill(sqrt((tmpJetphi[0]-tmpJetphi[1])*(tmpJetphi[0]-tmpJetphi[1])));      
       h_jet1metdphi[3]->Fill(jet1metdphi);
       h_jet2metdphi[3]->Fill(jet2metdphi);
 
-      h_jet1phi[1]->Fill(Jetphi[0]);
-      h_jet2phi[1]->Fill(Jetphi[1]);
+      h_jet1phi[1]->Fill(tmpJetphi[0]);
+      h_jet2phi[1]->Fill(tmpJetphi[1]);
       h_METphi[1]->Fill(METphi_fullcorr_nocc);
     }
   }
-
+  
   // scale histograms to desired values
+
   char ytitle[128];
   sprintf(ytitle,"Events / %2.0f pb^{-1}",luminosity_);
   h_selections[0]->Scale(scale);
@@ -1061,7 +1187,7 @@ void allData::Loop() {
   h_selections[1]->GetXaxis()->SetBinLabel(17,"E^{#mu}_{T} < 15 GeV");
   h_selections[1]->SetStats(kFALSE);
 
-  for (unsigned int mine = 0; mine < 2; ++mine) {
+  for (int mine = 0; mine < 2; ++mine) {
     sprintf(ytitle,"Events / %2.0f pb^{-1}",luminosity_);
     h_jet1phi[mine]->Scale(scale);
     h_jet1phi[mine]->GetYaxis()->SetTitle(ytitle);
@@ -1076,9 +1202,9 @@ void allData::Loop() {
     h_Minv[mine]->Scale(scale);
     h_Minv[mine]->GetYaxis()->SetTitle(ytitle);}
   
-  for (unsigned int mine = 0; mine < 4; ++mine) {
+  for (int mine = 0; mine < 4; ++mine) {
     sprintf(ytitle,"Events / %2.0f pb^{-1}",luminosity_);
-    for (unsigned int my = 0; my < 2; ++my) {
+    for (int my = 0; my < 2; ++my) {
       h_Njets[mine][my]->Scale(scale);
       h_Njets[mine][my]->GetYaxis()->SetTitle(ytitle);}
 
@@ -1143,8 +1269,8 @@ void allData::Loop() {
 
   //
   int Nevents = nentries;
-  printf("\"Nevents\"   \"preselection\"   \"finaljet\"   \"dphiselection\"   \"htselection\"   \"metselection\"   \"mhtselection\"   \"leptonveto\"\n");
-  printf("\"%d\"   \"%d\"   \"%d\"   \"%d\"   \"%d\"   \"%d\"   \"%d\"   \"%d\"\n",Nevents,pscounter,fjcounter,dphicounter,htcounter,metcounter,mhtcounter,leptoncounter);
+  printf("\"Nevents\"   \"preselection\"   \"finaljet\"   \"dphiselection\"   \"metselection\"   \"leptonveto\"   \"htselection\"   \"mhtselection\"\n");
+  printf("\"%d\"   \"%d\"   \"%d\"   \"%d\"   \"%d\"   \"%d\"   \"%d\"   \"%d\"\n",Nevents,pscounter,fjcounter,dphicounter,metcounter,leptoncounter,htcounter,mhtcounter);
 
   //---------------------------------------------------------
   //Write out root file with histograms

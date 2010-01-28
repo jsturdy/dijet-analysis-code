@@ -4,22 +4,22 @@
 // Package:    JaredSusyAnalyzer
 // Class:      JaredSusyAnalyzer
 // 
-/**\class JaredSusyAnalyzer JaredSusyAnalyzer.cc SusyAnalysis/AnalysisSkeleton/src/JaredSusyAnalyzer.cc
+/**\class JaredSusyAnalyzer JaredSusyAnalyzer.cc JSturdy/AnalysisTools/plugins/JaredSusyAnalyzer.cc
 
-Description: Skeleton analysis for SUSY search with Jets + MET
+Description: Variable collector/ntupler for SUSY search with Jets + MET
 
 Implementation:Uses the EventSelector interface for event selection and TFileService for plotting.
 
 */
 //
-// Original Author:  Markus Stoye
+// Original Author:  Markus Stoye, (modified by Jared Sturdy from SusyDiJetAnalysis)
 //         Created:  Mon Feb 18 15:40:44 CET 2008
 // $Id: JaredSusyAnalyzer.cpp,v 1.39 2009/05/31 12:46:17 pioppi Exp $
 //
 //
 //#include "SusyAnalysis/EventSelector/interface/BJetEventSelector.h"
 #include "UserCode/AnalysisTools/test/JaredSusyAnalyzer.h"
-#include "DataFormats/MuonReco/interface/MuonSelectors.h"
+//#include "DataFormats/MuonReco/interface/MuonSelectors.h"
 //#define _USE_MATH_DEFINES
 //#include <math.h>
 #include <TMath.h>
@@ -32,24 +32,33 @@ using namespace edm;
 JaredSusyAnalyzer::JaredSusyAnalyzer(const edm::ParameterSet& iConfig):
   eventWeight_( iConfig.getParameter<double>("eventWeight") ),
   nrEventTotalRaw_(0), nrEventTotalWeighted_(0.0),
-  pathNames_(0), nEvents_(0), nWasRun_(0), nAccept_(0), nErrors_(0), hlWasRun_(0), hlAccept_(0), hlErrors_(0), init_(false), //georgia
-  genTag_(iConfig.getParameter<edm::InputTag>("genTag")),
-  jetMaxEta_(iConfig.getParameter<double>("jetMaxEta")),
-  jetMinPt_(iConfig.getParameter<double>("jetMinPt"))
+  pathNames_(0), nEvents_(0), nWasRun_(0), nAccept_(0), nErrors_(0), hlWasRun_(0), hlAccept_(0), hlErrors_(0), init_(false) //georgia
 { 
+
+  //defaults
+  jetMaxEta_ = 3.0;
+  jetMinPt_ = 30;
+  doMCData_ = true;
   // Say something about event weights
+  if (iConfig.exists("jetMaxEta")) jetMaxEta_ = iConfig.getParameter<double>("jetMaxEta");
+  if (iConfig.exists("jetMinPt"))  jetMinPt_  = iConfig.getParameter<double>("jetMinPt");
+  if (iConfig.exists("doMCData"))  doMCData_  = iConfig.getParameter<bool>("doMCData");
+  if (doMCData_) if (iConfig.exists("genTag"))    genTag_    = iConfig.getParameter<edm::InputTag>("genTag");
  
   edm::LogInfo("JaredSusyTest") << "Global event weight set to " << eventWeight_;
     
   // get the data tags
   elecTag_   = iConfig.getParameter<edm::InputTag>("elecTag");
   muonTag_   = iConfig.getParameter<edm::InputTag>("muonTag");
+  pfelecTag_ = iConfig.getParameter<edm::InputTag>("pfelecTag");
+  pfmuonTag_ = iConfig.getParameter<edm::InputTag>("pfmuonTag");
   vtxTag_    = iConfig.getParameter<edm::InputTag>("vtxTag"); 
 
   //MET
   tcmetTag_ = iConfig.getParameter<edm::InputTag>("tcmetTag");
   pfmetTag_ = iConfig.getParameter<edm::InputTag>("pfmetTag");
   metTag_   = iConfig.getParameter<edm::InputTag>("metTag");
+  //mhtTag_   = iConfig.getParameter<edm::InputTag>("mhtTag");
 
   //Jets
   usePfjets_ = iConfig.getParameter<bool>("UsePfjet");
@@ -88,60 +97,61 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   run_   = iEvent.id().run();
   event_ = iEvent.id().event();
 
-  ALPGENParticleId myALPGENParticleId;
- 
-  mTempAlpIdTest = myALPGENParticleId.AplGenParID(iEvent,genTag_);
-  mTempAlpPtScale = myALPGENParticleId.getPt();
+  // GEN INFO do only if running on MC data
+  if(doMCData_) {
+    //ALPGENParticleId myALPGENParticleId;
+    //
+    //mTempAlpIdTest = myALPGENParticleId.AplGenParID(iEvent,genTag_);
+    //mTempAlpPtScale = myALPGENParticleId.getPt();
 
-  // GEN INFO
-  Handle<reco::GenParticleCollection>  genParticles;
-  iEvent.getByLabel(genTag_, genParticles);   
+    Handle<reco::GenParticleCollection>  genParticles;
+    iEvent.getByLabel(genTag_, genParticles);   
 
-  int count=0; int lcount=0; int tcount=0;
-  //length=genParticles->size();
-  for( size_t i = 0; i < genParticles->size(); ++ i ) {
-    const reco::Candidate& p = (*genParticles)[ i ];
+    int count=0; int lcount=0;// int tcount=0;
+    //length=genParticles->size();
+    for( size_t i = 0; i < genParticles->size(); ++ i ) {
+      const reco::Candidate& p = (*genParticles)[ i ];
 
-    int st = p.status();  
+      int st = p.status();  
 
-    if (st==3) {
-      ids[count] = p.pdgId(); genStatus[count]=p.status();
-      genE[count]=p.energy(); genPx[count]=p.px(); genPy[count]=p.py(); genPz[count]=p.pz();
+      if (st==3) {
+	ids[count] = p.pdgId(); genStatus[count]=p.status();
+	genE[count]=p.energy(); genPx[count]=p.px(); genPy[count]=p.py(); genPz[count]=p.pz();
       
-      if (p.numberOfMothers() > 0 ) { 
-	const reco::Candidate * mom = p.mother();
-
-	for( size_t j = 0; j < i; ++ j ) {
-	  const Candidate * ref = &((*genParticles)[j]);
-	  if (ref == mom) { refs[count]= j; }
-	}  
-      } else { refs[count]=-1;}
-
-      count++;
-    } else { // store also electrons or muons or photons of status 1 
-      if ( (abs(p.pdgId()) == 11) || (abs(p.pdgId()) == 13)  ) {
-	//      if ( (abs(p.pdgId()) == 11) || (abs(p.pdgId()) == 13) || p.pdgId() == 22 ) {
-
-	genLepIds[lcount] = p.pdgId(); genLepStatus[lcount]=p.status();
-	genLepE[lcount]=p.energy(); genLepPx[lcount]=p.px(); genLepPy[lcount]=p.py(); genLepPz[lcount]=p.pz();
-	
 	if (p.numberOfMothers() > 0 ) { 
 	  const reco::Candidate * mom = p.mother();
-	  if (mom->pdgId() == p.pdgId()) { mom = mom->mother(); }
 
 	  for( size_t j = 0; j < i; ++ j ) {
 	    const Candidate * ref = &((*genParticles)[j]);
-	    if (ref == mom) { genLepRefs[lcount]=ref->pdgId(); }
+	    if (ref == mom) { refs[count]= j; }
 	  }  
-	} else { genLepRefs[lcount]=-1;}
-	lcount++;
+	} else { refs[count]=-1;}
+
+	count++;
+      } else { // store also electrons or muons or photons of status 1 
+	if ( (abs(p.pdgId()) == 11) || (abs(p.pdgId()) == 13)  ) {
+	  //      if ( (abs(p.pdgId()) == 11) || (abs(p.pdgId()) == 13) || p.pdgId() == 22 ) {
+
+	  genLepIds[lcount] = p.pdgId(); genLepStatus[lcount]=p.status();
+	  genLepE[lcount]=p.energy(); genLepPx[lcount]=p.px(); genLepPy[lcount]=p.py(); genLepPz[lcount]=p.pz();
+	
+	  if (p.numberOfMothers() > 0 ) { 
+	    const reco::Candidate * mom = p.mother();
+	    if (mom->pdgId() == p.pdgId()) { mom = mom->mother(); }
+
+	    for( size_t j = 0; j < i; ++ j ) {
+	      const Candidate * ref = &((*genParticles)[j]);
+	      if (ref == mom) { genLepRefs[lcount]=ref->pdgId(); }
+	    }  
+	  } else { genLepRefs[lcount]=-1;}
+	  lcount++;
+	}
       }
     }
+    length=count; genLepLength=lcount;
+  }  
 
-  }
-
-  length=count; genLepLength=lcount;
-  
+  //Trigger results
   edm::LogVerbatim("JaredSusyEvent") << " Trigger decision  " << std::endl;
 
   //get the trigger decision
@@ -235,6 +245,8 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   mTempTreeEvent = event_;
 
   // get the Vertex collection
+
+  LogDebug("JaredSusyEvent") << "Vertex results for InputTag" << vtxTag_;
   edm::Handle<reco::VertexCollection> vertices;
   iEvent.getByLabel(vtxTag_, vertices);
   if ( !vertices.isValid() ) {
@@ -287,10 +299,11 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     mTempTreeElecAllIso[i]  = (*elecHandle)[i].caloIso() ;
     mTempTreeElecCharge[i]  = (*elecHandle)[i].charge();
 
-    mTempTreeElecECalIsoDeposit[i]  = (*elecHandle)[i].ecalIsoDeposit()->candEnergy() ;
-    mTempTreeElecHCalIsoDeposit[i]  = (*elecHandle)[i].hcalIsoDeposit()->candEnergy() ;
+    //mTempTreeElecECalIsoDeposit[i]  = (*elecHandle)[i].ecalIsoDeposit()->candEnergy() ;
+    //mTempTreeElecHCalIsoDeposit[i]  = (*elecHandle)[i].hcalIsoDeposit()->candEnergy() ;
 
     mTempTreeElecIdLoose[i]    = (*elecHandle)[i].electronID("eidLoose");
+    edm::LogVerbatim("JaredSusyEvent") << " looping over electrons " << endl;
     mTempTreeElecIdTight[i]    = (*elecHandle)[i].electronID("eidTight");
     mTempTreeElecIdRobLoose[i] = (*elecHandle)[i].electronID("eidRobustLoose");
     mTempTreeElecIdRobTight[i] = (*elecHandle)[i].electronID("eidRobustTight"); 
@@ -408,20 +421,31 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     mTempTreeMuonECalIso[i]                = (*muonHandle)[i].ecalIso();
     mTempTreeMuonHCalIso[i]                = (*muonHandle)[i].hcalIso() ;
     mTempTreeMuonAllIso[i]                 = (*muonHandle)[i].caloIso() ;
-    mTempTreeMuonIsGlobal[i]               = (*muonHandle)[i].isGlobalMuon();
-    mTempTreeMuonIsStandAlone[i]           = (*muonHandle)[i].isStandAloneMuon();
-    mTempTreeMuonIsTracker[i]              = (*muonHandle)[i].isTrackerMuon();
-    //mTempTreeMuonIsGlobalTight[i]          = (*muonHandle)[i].isGood(pat::Muon::SelectionType(6));
-    //mTempTreeMuonIsTMLastStationLoose[i]   = (*muonHandle)[i].isGood(pat::Muon::SelectionType(7));
-    //mTempTreeMuonTMLastStationTight[i]     = (*muonHandle)[i].isGood(pat::Muon::SelectionType(8));
-    //mTempTreeMuonTM2DCompatibilityLoose[i] = (*muonHandle)[i].isGood(pat::Muon::SelectionType(9));
-    //mTempTreeMuonTM2DCompatibilityTight[i] = (*muonHandle)[i].isGood(pat::Muon::SelectionType(10));
 
-    //mTempTreeMuonIsGlobalTight[i]          = (*muonHandle)[i].isGood(MuonSelectors::SelectionType(6));
-    //mTempTreeMuonIsTMLastStationLoose[i]   = (*muonHandle)[i].isGood(MuonSelectors::SelectionType(7));
-    //mTempTreeMuonTMLastStationTight[i]     = (*muonHandle)[i].isGood(MuonSelectors::SelectionType(8));
-    //mTempTreeMuonTM2DCompatibilityLoose[i] = (*muonHandle)[i].isGood(MuonSelectors::SelectionType(9));
-    //mTempTreeMuonTM2DCompatibilityTight[i] = (*muonHandle)[i].isGood(MuonSelectors::SelectionType(10));
+    //_muon_isGood_All = muon::isGoodMuon(*the_muon, muon::All);
+    //_muon_isGood_TrackerMuonArbitrated = muon::isGoodMuon(*the_muon, muon::TrackerMuonArbitrated);
+    //_muon_isGood_AllArbitrated = muon::isGoodMuon(*the_muon, muon::AllArbitrated);
+    //_muon_isGood_TMOneStationLoose = muon::isGoodMuon(*the_muon, muon::TMOneStationLoose);
+    //_muon_isGood_TMOneStationTight = muon::isGoodMuon(*the_muon, muon::TMOneStationTight);
+    //_muon_isGood_TMLastStationOptimizedLowPtLoose = muon::isGoodMuon(*the_muon, muon::TMLastStationOptimizedLowPtLoose);
+    //_muon_isGood_TMLastStationOptimizedLowPtTight = muon::isGoodMuon(*the_muon, muon::TMLastStationOptimizedLowPtTight);
+    
+    //mTempTreeMuonIsGlobal[i]               = (*muonHandle)[i].isGlobalMuon();
+    mTempTreeMuonIsGlobal[i] = muon::isGoodMuon((*muonHandle)[i], muon::AllGlobalMuons);
+    //mTempTreeMuonIsStandAlone[i]           = (*muonHandle)[i].isStandAloneMuon();
+    mTempTreeMuonIsStandAlone[i] = muon::isGoodMuon((*muonHandle)[i], muon::AllStandAloneMuons);
+    //mTempTreeMuonIsTracker[i]              = (*muonHandle)[i].isTrackerMuon();
+    mTempTreeMuonIsTracker[i] = muon::isGoodMuon((*muonHandle)[i], muon::AllTrackerMuons);
+    //mTempTreeMuonIsGlobalTight[i]          = (*muonHandle)[i].isGood(pat::Muon::SelectionType(6));
+    mTempTreeMuonIsGlobalTight[i] = muon::isGoodMuon((*muonHandle)[i], muon::GlobalMuonPromptTight);
+    //mTempTreeMuonIsTMLastStationLoose[i]   = (*muonHandle)[i].isGood(pat::Muon::SelectionType(7));
+    mTempTreeMuonIsTMLastStationLoose[i] = muon::isGoodMuon((*muonHandle)[i], muon::TMLastStationLoose);
+    //mTempTreeMuonTMLastStationTight[i]     = (*muonHandle)[i].isGood(pat::Muon::SelectionType(8));
+    mTempTreeMuonTMLastStationTight[i] = muon::isGoodMuon((*muonHandle)[i], muon::TMLastStationTight);
+    //mTempTreeMuonTM2DCompatibilityLoose[i] = (*muonHandle)[i].isGood(pat::Muon::SelectionType(9));
+    mTempTreeMuonTM2DCompatibilityLoose[i] = muon::isGoodMuon((*muonHandle)[i], muon::TM2DCompatibilityLoose);
+    //mTempTreeMuonTM2DCompatibilityTight[i] = (*muonHandle)[i].isGood(pat::Muon::SelectionType(10));
+    mTempTreeMuonTM2DCompatibilityTight[i] = muon::isGoodMuon((*muonHandle)[i], muon::TM2DCompatibilityTight);
     
     mTempTreeMuonECalIsoDeposit[i]  = (*muonHandle)[i].ecalIsoDeposit()->candEnergy() ;
     mTempTreeMuonHCalIsoDeposit[i]  = (*muonHandle)[i].hcalIsoDeposit()->candEnergy() ;
@@ -565,6 +589,11 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
    
   //benedetta : PFjets
   edm::Handle< std::vector<pat::Jet> > pfjetHandle;
+
+  double pfsumpx = 0;
+  double pfsumpy = 0;
+  double pfsumpt = 0;
+
   if (usePfjets_) {
     iEvent.getByLabel(pfjetTag_, pfjetHandle);
     if(!pfjetHandle.isValid()){
@@ -573,30 +602,33 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     }
     
     mTempTreeNPFjet = pfjetHandle->size();
-  }
-  else mTempTreeNPFjet = 0;
-  double pfsumpx = 0;
-  double pfsumpy = 0;
-  double pfsumpt = 0;
-
-  if( mTempTreeNPFjet > 50) mTempTreeNPFjet=50;
-  for(int pf=0; pf< mTempTreeNPFjet; pf++){
-    if ((*pfjetHandle)[pf].pt() > 10.) {
-      mTempTreePFjetEta[pf]    = (*pfjetHandle)[pf].eta();
-      mTempTreePFjetPhi[pf]    = (*pfjetHandle)[pf].phi();
-      mTempTreePFjetE[pf]      = (*pfjetHandle)[pf].energy();
-      mTempTreePFjetPx[pf]     = (*pfjetHandle)[pf].px();
-      mTempTreePFjetPy[pf]     = (*pfjetHandle)[pf].py();
-      mTempTreePFjetPz[pf]     = (*pfjetHandle)[pf].pz();
-      mTempTreePFjetPt[pf]     = (*pfjetHandle)[pf].pt();
-      mTempTreePFjetCharge[pf] = (*pfjetHandle)[pf].charge();
-    
-      if ((*pfjetHandle)[pf].pt()>jetMinPt_) {
-	if (fabs((*pfjetHandle)[pf].eta())<jetMaxEta_) pfsumpt+=(*pfjetHandle)[pf].pt();
-	pfsumpx += (*pfjetHandle)[pf].px();
-	pfsumpy += (*pfjetHandle)[pf].py();}
+    if( mTempTreeNPFjet > 50) mTempTreeNPFjet=50;
+    for(int pf=0; pf< mTempTreeNPFjet; pf++){
+      if ((*pfjetHandle)[pf].pt() > 10.) {
+	mTempTreePFjetEta[pf]    = (*pfjetHandle)[pf].eta();
+	mTempTreePFjetPhi[pf]    = (*pfjetHandle)[pf].phi();
+	mTempTreePFjetE[pf]      = (*pfjetHandle)[pf].energy();
+	mTempTreePFjetPx[pf]     = (*pfjetHandle)[pf].px();
+	mTempTreePFjetPy[pf]     = (*pfjetHandle)[pf].py();
+	mTempTreePFjetPz[pf]     = (*pfjetHandle)[pf].pz();
+	mTempTreePFjetPt[pf]     = (*pfjetHandle)[pf].pt();
+	mTempTreePFjetCharge[pf] = (*pfjetHandle)[pf].charge();
+	
+	if ((*pfjetHandle)[pf].isCaloJet())
+	  mTempTreePFjetFem[pf] = (*pfjetHandle)[pf].emEnergyFraction();
+	if ((*pfjetHandle)[pf].isPFJet())
+	  mTempTreePFjetFem[pf] = (*pfjetHandle)[pf].neutralEmEnergyFraction()+
+	    (*pfjetHandle)[pf].chargedEmEnergyFraction();
+	
+	
+	if ((*pfjetHandle)[pf].pt()>jetMinPt_) {
+	  if (fabs((*pfjetHandle)[pf].eta())<jetMaxEta_) pfsumpt+=(*pfjetHandle)[pf].pt();
+	  pfsumpx += (*pfjetHandle)[pf].px();
+	  pfsumpy += (*pfjetHandle)[pf].py();}
+      }
     }
   }
+  else mTempTreeNPFjet = 0;
 
   // get the calo jets
   edm::Handle< std::vector<pat::Jet> > jetHandle;
@@ -902,7 +934,7 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
 
   //
-  // get the calo (SC5) MET result
+  // get the calo (AK5) MET result
   //
   edm::Handle< std::vector<pat::MET> > metHandle;
   iEvent.getByLabel(metTag_, metHandle);
@@ -1058,7 +1090,7 @@ JaredSusyAnalyzer::initPlots() {
   // Now we add some additional ones for the dijet analysis
   //mPreselection = fs->make<TTree>( "Preselection", "data after preselection" );
   mAllData = fs->make<TTree>( "AllData", "data after cuts" );
-  mAllData->SetAutoSave(1000);
+  mAllData->SetAutoSave(10);
 
   // Add the branches
   mAllData->Branch("run",&mTempTreeRun,"run/int");
@@ -1078,19 +1110,19 @@ JaredSusyAnalyzer::initPlots() {
   mAllData->Branch("nFullMET",  &nFullMET,  "nFullMET/int");
   mAllData->Branch("nUncorrMET",&nUncorrMET,"nUncorrMET/int");
 
-//  //pfMET information
-//  mAllData->Branch("pfMET_fullcorr_nocc",   mTempTreepfMET_Fullcorr_nocc,    "mTempTreepfMET_Fullcorr_nocc[nFullMET]/double");
-//  mAllData->Branch("pfMETphi_fullcorr_nocc",&mTempTreepfMETphi_Fullcorr_nocc,"mTempTreepfMETphi_Fullcorr_nocc/double");
-//
-//  mAllData->Branch("pfMET_nocorr_nocc",  mTempTreepfMET_Nocorr_nocc,  "mTempTreepfMET_Nocorr_nocc[nUncorrMET]/double");
-//  mAllData->Branch("pfMET_muoncorr_nocc",mTempTreepfMET_Muoncorr_nocc,"mTempTreepfMET_Muoncorr_nocc[nUncorrMET]/double");
-//  mAllData->Branch("pfMET_jeccorr_nocc", mTempTreepfMET_JECcorr_nocc, "mTempTreepfMET_JECcorr_nocc[nUncorrMET]/double");
-//
-//  mAllData->Branch("pfMETphi_fullcorr_nocc",&mTempTreepfMETphi_Fullcorr_nocc,"mTempTreepfMETphi_Fullcorr_nocc/double");
-//  mAllData->Branch("pfMETphi_muoncorr_nocc",&mTempTreepfMETphi_Muoncorr_nocc,"mTempTreepfMETphi_Muoncorr_nocc/double");
-//  mAllData->Branch("pfMETphi_jeccorr_nocc", &mTempTreepfMETphi_JECcorr_nocc, "mTempTreepfMETphi_JECcorr_nocc/double");
-//  mAllData->Branch("pfMET_Fullcorr_nocc_significance",&mTempTreepfMET_Fullcorr_nocc_significance,"mTempTreepfMET_Fullcorr_nocc_significance/double");
-//  mAllData->Branch("GenpfMET",&mTempTreepfMET_Gen,"mTempTreepfMET_Gen[3]/double",6400);
+  //pfMET information
+  mAllData->Branch("pfMET_fullcorr_nocc",   mTempTreepfMET_Fullcorr_nocc,    "mTempTreepfMET_Fullcorr_nocc[nFullMET]/double");
+  mAllData->Branch("pfMETphi_fullcorr_nocc",&mTempTreepfMETphi_Fullcorr_nocc,"mTempTreepfMETphi_Fullcorr_nocc/double");
+
+  mAllData->Branch("pfMET_nocorr_nocc",  mTempTreepfMET_Nocorr_nocc,  "mTempTreepfMET_Nocorr_nocc[nUncorrMET]/double");
+  mAllData->Branch("pfMET_muoncorr_nocc",mTempTreepfMET_Muoncorr_nocc,"mTempTreepfMET_Muoncorr_nocc[nUncorrMET]/double");
+  mAllData->Branch("pfMET_jeccorr_nocc", mTempTreepfMET_JECcorr_nocc, "mTempTreepfMET_JECcorr_nocc[nUncorrMET]/double");
+
+  mAllData->Branch("pfMETphi_fullcorr_nocc",&mTempTreepfMETphi_Fullcorr_nocc,"mTempTreepfMETphi_Fullcorr_nocc/double");
+  mAllData->Branch("pfMETphi_muoncorr_nocc",&mTempTreepfMETphi_Muoncorr_nocc,"mTempTreepfMETphi_Muoncorr_nocc/double");
+  mAllData->Branch("pfMETphi_jeccorr_nocc", &mTempTreepfMETphi_JECcorr_nocc, "mTempTreepfMETphi_JECcorr_nocc/double");
+  mAllData->Branch("pfMET_Fullcorr_nocc_significance",&mTempTreepfMET_Fullcorr_nocc_significance,"mTempTreepfMET_Fullcorr_nocc_significance/double");
+  mAllData->Branch("GenpfMET",&mTempTreepfMET_Gen,"mTempTreepfMET_Gen[3]/double",6400);
 
   //tcMET information
   mAllData->Branch("tcMET_fullcorr_nocc",   mTempTreetcMET_Fullcorr_nocc,    "mTempTreetcMET_Fullcorr_nocc[nFullMET]/double");
@@ -1132,6 +1164,7 @@ JaredSusyAnalyzer::initPlots() {
   mAllData->Branch("nVtx",      &mTempTreenVtx,   "nVtx/int");
   mAllData->Branch("VertexChi2",mTempTreeVtxChi2,"VertexChi2[nVtx]/double");
   mAllData->Branch("VertexNdof",mTempTreeVtxNdof,"VertexNdof[nVtx]/double");
+  mAllData->Branch("VertexNormalizedChi2",mTempTreeVtxNormalizedChi2,"VertexNormalizedChi2[nVtx]/double");
   mAllData->Branch("VertexNormalizedChi2",mTempTreeVtxNormalizedChi2,"VertexNormalizedChi2[nVtx]/double");
 
   mAllData->Branch("VertexX", mTempTreeVtxX, "VertexX[nVtx]/double");
@@ -1342,6 +1375,7 @@ JaredSusyAnalyzer::initPlots() {
   mAllData->Branch("PFjetPz",&mTempTreePFjetPz,"PFjetPz[NPFjet]/double");
   mAllData->Branch("PFjetPt",&mTempTreePFjetPt,"PFjetPt[NPFjet]/double");
   mAllData->Branch("PFjetCharge",&mTempTreePFjetCharge,"PFjetCharge[NPFjet]/double");
+  mAllData->Branch("PFjetFem",&mTempTreePFjetFem,"PFjetFem[NPFjet]/double");
   
   mAllData->Branch("genN",&length,"genN/int");
   mAllData->Branch("genid",ids,"ids[genN]/int");
@@ -1361,8 +1395,8 @@ JaredSusyAnalyzer::initPlots() {
   mAllData->Branch("genLepPz",genLepPz,"genLepPz[genLepN]/float");
   mAllData->Branch("genLepStatus",genLepStatus,"genLepStatus[genLepN]/int");
 
-  mAllData->Branch("AlpPtScale" ,&mTempAlpPtScale,"mTempAlpPtScale/double");
-  mAllData->Branch("AlpIdTest" ,&mTempAlpIdTest ,"AlpIdTest/int");
+  //mAllData->Branch("AlpPtScale" ,&mTempAlpPtScale,"mTempAlpPtScale/double");
+  //mAllData->Branch("AlpIdTest" ,&mTempAlpIdTest ,"AlpIdTest/int");
   
   // MPT Markus 
   mAllData->Branch("MPTPhi" ,& mTempTreeMPTPhi ,"MPTPhi/double");
