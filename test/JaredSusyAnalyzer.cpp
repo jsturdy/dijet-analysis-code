@@ -18,7 +18,8 @@ Implementation:Uses the EventSelector interface for event selection and TFileSer
 //
 //
 //#include "SusyAnalysis/EventSelector/interface/BJetEventSelector.h"
-#include "SusyAnalysis/AnalysisSkeleton/test/JaredSusyAnalyzer.h"
+#include "UserCode/AnalysisTools/test/JaredSusyAnalyzer.h"
+#include "DataFormats/MuonReco/interface/MuonSelectors.h"
 //#define _USE_MATH_DEFINES
 //#include <math.h>
 #include <TMath.h>
@@ -41,29 +42,20 @@ JaredSusyAnalyzer::JaredSusyAnalyzer(const edm::ParameterSet& iConfig):
   edm::LogInfo("JaredSusyTest") << "Global event weight set to " << eventWeight_;
     
   // get the data tags
-  photTag_   = iConfig.getParameter<edm::InputTag>("photTag");
   elecTag_   = iConfig.getParameter<edm::InputTag>("elecTag");
   muonTag_   = iConfig.getParameter<edm::InputTag>("muonTag");
-  tauTag_    = iConfig.getParameter<edm::InputTag>("tauTag");
   vtxTag_    = iConfig.getParameter<edm::InputTag>("vtxTag"); 
 
   //MET
   tcmetTag_ = iConfig.getParameter<edm::InputTag>("tcmetTag");
-  //pfmetTag_ = iConfig.getParameter<edm::InputTag>("pfmetTag");
+  pfmetTag_ = iConfig.getParameter<edm::InputTag>("pfmetTag");
   metTag_   = iConfig.getParameter<edm::InputTag>("metTag");
 
   //Jets
-  jetTag_    = iConfig.getParameter<edm::InputTag>("jetTag");
   usePfjets_ = iConfig.getParameter<bool>("UsePfjet");
   pfjetTag_  = iConfig.getParameter<edm::InputTag>("pfjetTag");
+  jetTag_    = iConfig.getParameter<edm::InputTag>("jetTag");
   jptTag_    = iConfig.getParameter<edm::InputTag>("jptTag");
-
-  ccJptTag_  = iConfig.getParameter<edm::InputTag>("ccJptTag");
-  ccjetTag_  = iConfig.getParameter<edm::InputTag>("ccjetTag");
-  ccmetTag_  = iConfig.getParameter<edm::InputTag>("ccmetTag");
-  ccelecTag_ = iConfig.getParameter<edm::InputTag>("ccelecTag"); 
-  ccmuonTag_ = iConfig.getParameter<edm::InputTag>("ccmuonTag");
-  ccphotTag_ = iConfig.getParameter<edm::InputTag>("ccphotonTag");
 
   // trigger stuff
   triggerResults_ = iConfig.getParameter<edm::InputTag>("triggerResults");
@@ -146,263 +138,9 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       }
     }
 
-    int ndau_charged=0;
-    int ndau_neutral=0;
-    int ndau_neutrinos=0;
-    int ndau_leptonic=0;
-    float energy_charged=0.;
-    float energy_neutral=0.;
-    float energy_neutrinos=0.;
-    float energy_leptonic=0.;
-    float px_charged=0.;
-    float px_neutral=0.;
-    float px_neutrinos=0.;
-    float px_leptonic=0.;
-    float py_charged=0.;
-    float py_neutral=0.;
-    float py_neutrinos=0.;
-    float py_leptonic=0.;
-    float pz_charged=0.;
-    float pz_neutral=0.;
-    float pz_neutrinos=0.;
-    float pz_leptonic=0.;
-    int id_lepton_fromtau=0;
-    float px[5], py[5], pz[5];
-    int id[5];
-
-    //store taus
-    if ( abs(p.pdgId()) == 15) {
-      if(p.status()==2){
-	genTauIds[tcount] = p.pdgId(); genTauStatus[tcount]=p.status();
-	genTauE[tcount]=p.energy(); genTauPx[tcount]=p.px(); genTauPy[tcount]=p.py(); genTauPz[tcount]=p.pz();
-	
-	if (p.numberOfMothers() > 0 ) { 
-	  const reco::Candidate * mom = p.mother();
-	  if (mom->pdgId() == p.pdgId()) { mom = mom->mother(); }
-	  
-	  for( size_t j = 0; j < i; ++ j ) {
-	    const Candidate * ref = &((*genParticles)[j]);
-	    if (ref == mom) { genTauRefs[tcount]=ref->pdgId(); }
-	  }  
-
-	} else { genTauRefs[tcount]=-1;}
-      
-	if(p.numberOfDaughters()>0){
-	  for(size_t dau=0; dau<p.numberOfDaughters(); dau++){
-	    //charged daughters
-	    if(p.daughter(dau)->charge()!=0){
-	      //lepton daughters
-	      if(abs(p.daughter(dau)->pdgId())==11 || abs(p.daughter(dau)->pdgId())==13 || abs(p.daughter(dau)->pdgId())==15){
-		ndau_leptonic++;
-                id_lepton_fromtau=p.daughter(dau)->pdgId();
-		energy_leptonic=energy_leptonic+p.daughter(dau)->energy();
-		px_leptonic=px_leptonic+p.daughter(dau)->px();
-		py_leptonic=py_leptonic+p.daughter(dau)->py();
-		pz_leptonic=pz_leptonic+p.daughter(dau)->pz();
-
-	      }
-	      //hadron daughters
-	      else {
-		//figlie cariche stabili ok!
-		if(abs(p.daughter(dau)->pdgId())!=213){
-		  px[ndau_charged]=p.daughter(dau)->px();
-		  py[ndau_charged]=p.daughter(dau)->py();
-		  pz[ndau_charged]=p.daughter(dau)->pz();
-		  id[ndau_charged]=p.daughter(dau)->pdgId();
-		  
-		  ndau_charged++;
-		  energy_charged=energy_charged+p.daughter(dau)->energy();
-		  px_charged=px_charged+p.daughter(dau)->px();
-		  py_charged=py_charged+p.daughter(dau)->py();
-		  pz_charged=pz_charged+p.daughter(dau)->pz();
-
-		}
-		//figlie cariche non stabili
-		else {
-		  //loop sulle nipoti
-		  for(size_t nep=0; nep<p.daughter(dau)->numberOfDaughters(); nep++){
-		    //nipoti neutre 		    
-		    if(p.daughter(dau)->daughter(nep)->charge()==0){
-		      //nipoti neutre stabili ok!
-		      if(p.daughter(dau)->daughter(nep)->pdgId()!=113 && p.daughter(dau)->daughter(nep)->pdgId()!=223 && p.daughter(dau)->daughter(nep)->pdgId()!=221 ){
-
-			//			cout <<p.daughter(dau)->daughter(nep)->pdgId()<<endl;
-			ndau_neutral++;
-			energy_neutral=energy_neutral+p.daughter(dau)->daughter(nep)->energy();
-			px_neutral=px_neutral+p.daughter(dau)->daughter(nep)->px();
-			py_neutral=py_neutral+p.daughter(dau)->daughter(nep)->py();
-			pz_neutral=pz_neutral+p.daughter(dau)->daughter(nep)->pz();
-		      }
-		      //nipoti neutre non stabili
-		      else {
-			//loop sulle bisnipoti
-			for(size_t bisnep=0; bisnep<p.daughter(dau)->daughter(nep)->numberOfDaughters(); bisnep++){
-			  //bisnipoti neutre ok!
-			  if(p.daughter(dau)->daughter(nep)->daughter(bisnep)->charge()==0){
-			    //			    cout <<p.daughter(dau)->daughter(nep)->daughter(bisnep)->pdgId()<<endl;
-			    ndau_neutral++;
-			    energy_neutral=energy_neutral+p.daughter(dau)->daughter(nep)->daughter(bisnep)->energy();
-			    px_neutral=px_neutral+p.daughter(dau)->daughter(nep)->daughter(bisnep)->px();
-			    py_neutral=py_neutral+p.daughter(dau)->daughter(nep)->daughter(bisnep)->py();
-			    pz_neutral=pz_neutral+p.daughter(dau)->daughter(nep)->daughter(bisnep)->pz();
-			  }
-			  //bisnipoti cariche ok!
-			  else {
-			    px[ndau_charged]=p.daughter(dau)->daughter(nep)->daughter(bisnep)->px();
-			    py[ndau_charged]=p.daughter(dau)->daughter(nep)->daughter(bisnep)->py();
-			    pz[ndau_charged]=p.daughter(dau)->daughter(nep)->daughter(bisnep)->pz();
-			    id[ndau_charged]=p.daughter(dau)->daughter(nep)->daughter(bisnep)->pdgId();
-			    
-			    ndau_charged++;
-			    energy_charged=energy_charged+p.daughter(dau)->daughter(nep)->daughter(bisnep)->energy();
-			    px_charged=px_charged+p.daughter(dau)->daughter(nep)->daughter(bisnep)->px();
-			    py_charged=py_charged+p.daughter(dau)->daughter(nep)->daughter(bisnep)->py();
-			    pz_charged=pz_charged+p.daughter(dau)->daughter(nep)->daughter(bisnep)->pz();
-			  }
-			}
-		      }
-		    }
-		    //nipoti cariche ok!
-		    else {
-		      px[ndau_charged]=p.daughter(dau)->daughter(nep)->px();
-		      py[ndau_charged]=p.daughter(dau)->daughter(nep)->py();
-		      pz[ndau_charged]=p.daughter(dau)->daughter(nep)->pz();
-		      id[ndau_charged]=p.daughter(dau)->daughter(nep)->pdgId();
-		      
-		      ndau_charged++;
-		      energy_charged=energy_charged+p.daughter(dau)->daughter(nep)->energy();
-		      px_charged=px_charged+p.daughter(dau)->daughter(nep)->px();
-		      py_charged=py_charged+p.daughter(dau)->daughter(nep)->py();
-		      pz_charged=pz_charged+p.daughter(dau)->daughter(nep)->pz();
-		    }
-		  }
-		}
-	      }
-	    }
-	    //figlie neutre
-	    if(p.daughter(dau)->charge()==0){
-	      // figlie neutrini
-	      if(abs(p.daughter(dau)->pdgId())==12 || abs(p.daughter(dau)->pdgId())==14 ||abs(p.daughter(dau)->pdgId())==16 ){
-		ndau_neutrinos++;
-		energy_neutrinos=energy_neutrinos+p.daughter(dau)->energy();
-		px_neutrinos=px_neutrinos+p.daughter(dau)->px();
-		py_neutrinos=py_neutrinos+p.daughter(dau)->py();
-		pz_neutrinos=pz_neutrinos+p.daughter(dau)->pz();
-	      }
-	      // figlie non neutrini
-	      else {	  
-		// figlie neutre stabili ok!
-		if(p.daughter(dau)->pdgId()!=113 && p.daughter(dau)->pdgId()!=223 && p.daughter(dau)->pdgId()!=221){
-		  //		  cout << p.daughter(dau)->pdgId()<<endl;
-		  ndau_neutral++;
-		  energy_neutral=energy_neutral+p.daughter(dau)->energy();
-		  px_neutral=px_neutral+p.daughter(dau)->px();
-		  py_neutral=py_neutral+p.daughter(dau)->py();
-		  pz_neutral=pz_neutral+p.daughter(dau)->pz();
-		}
-		// figlie neutre non stabili
-		else{
-		  //loop sulle nipoti
-		  for(size_t nep=0; nep<p.daughter(dau)->numberOfDaughters(); nep++){
-		    // nipoti neutre ok!
-		    if(p.daughter(dau)->daughter(nep)->charge()==0){
-		      //		      cout << p.daughter(dau)->daughter(nep)->pdgId() <<endl;
-		      ndau_neutral++;
-		      energy_neutral=energy_neutral+p.daughter(dau)->daughter(nep)->energy();
-		      px_neutral=px_neutral+p.daughter(dau)->daughter(nep)->px();
-		      py_neutral=py_neutral+p.daughter(dau)->daughter(nep)->py();
-		      pz_neutral=pz_neutral+p.daughter(dau)->daughter(nep)->pz();
-		    }
-		    //nipoti cariche
-		    else {
-		      // nipoti cariche stabili ok!
-		      if(abs(p.daughter(dau)->daughter(nep)->pdgId())!=213){
-			px[ndau_charged]=p.daughter(dau)->daughter(nep)->px();
-			py[ndau_charged]=p.daughter(dau)->daughter(nep)->py();
-			pz[ndau_charged]=p.daughter(dau)->daughter(nep)->pz();
-			id[ndau_charged]=p.daughter(dau)->daughter(nep)->pdgId();
-			  
-			ndau_charged++;
-			energy_charged=energy_charged+p.daughter(dau)->daughter(nep)->energy();
-			px_charged=px_charged+p.daughter(dau)->daughter(nep)->px();
-			py_charged=py_charged+p.daughter(dau)->daughter(nep)->py();
-			pz_charged=pz_charged+p.daughter(dau)->daughter(nep)->pz();
-		      }
-		      //nipoti cariche non stabili
-		      else{
-			//loop sulle bisnipoti
-			for(size_t bisnep=0; bisnep<p.daughter(dau)->daughter(nep)->numberOfDaughters(); bisnep++){
-			  //bisnipoti neutre ok!
-			  if(p.daughter(dau)->daughter(nep)->daughter(bisnep)->charge()==0){
-			    //			    cout << p.daughter(dau)->daughter(nep)->daughter(bisnep)->pdgId()<<endl;
-			    ndau_neutral++;
-			    energy_neutral=energy_neutral+p.daughter(dau)->daughter(nep)->daughter(bisnep)->energy();
-			    px_neutral=px_neutral+p.daughter(dau)->daughter(nep)->daughter(bisnep)->px();
-			    py_neutral=py_neutral+p.daughter(dau)->daughter(nep)->daughter(bisnep)->py();
-			    pz_neutral=pz_neutral+p.daughter(dau)->daughter(nep)->daughter(bisnep)->pz();
-			  }
-			  //bisnipoti cariche ok!
-			  else {
-			    px[ndau_charged]=p.daughter(dau)->daughter(nep)->daughter(bisnep)->px();
-			    py[ndau_charged]=p.daughter(dau)->daughter(nep)->daughter(bisnep)->py();
-			    pz[ndau_charged]=p.daughter(dau)->daughter(nep)->daughter(bisnep)->pz();
-			    id[ndau_charged]=p.daughter(dau)->daughter(nep)->daughter(bisnep)->pdgId();
-			    
-			    ndau_charged++;
-			    energy_charged=energy_charged+p.daughter(dau)->daughter(nep)->daughter(bisnep)->energy();
-			    px_charged=px_charged+p.daughter(dau)->daughter(nep)->daughter(bisnep)->px();
-			    py_charged=py_charged+p.daughter(dau)->daughter(nep)->daughter(bisnep)->py();
-			    pz_charged=pz_charged+p.daughter(dau)->daughter(nep)->daughter(bisnep)->pz();
-			  }}}}}}}}}}
-      
-    
-        //	if(ndau_charged>0) {cout << id[0] <<"   "<<id[1]<<"    "<<id[2]<<endl;}
-	
-	genTauDauCh1Id[tcount]=id[0];
-	genTauDauCh1Px[tcount]=px[0];
-	genTauDauCh1Py[tcount]=py[0];
-	genTauDauCh1Pz[tcount]=pz[0];
-	
-	genTauDauCh2Id[tcount]=id[1];
-	genTauDauCh2Px[tcount]=px[1];
-	genTauDauCh2Py[tcount]=py[1];
-	genTauDauCh2Pz[tcount]=pz[1];
-	
-	genTauDauCh3Id[tcount]=id[2];
-	genTauDauCh3Px[tcount]=px[2];
-	genTauDauCh3Py[tcount]=py[2];
-	genTauDauCh3Pz[tcount]=pz[2];
-	
-        genTauDauLeptonId[tcount]=id_lepton_fromtau;
-	genTauDauLeptonic[tcount]=ndau_leptonic;
-	genTauDauCharged[tcount]=ndau_charged;
-	genTauDauNeutral[tcount]=ndau_neutral;
-	genTauDauNeutrinos[tcount]=ndau_neutrinos;
-	
-	genTauDauEnergyLeptonic[tcount]=energy_leptonic;
-	genTauDauEnergyCharged[tcount]=energy_charged;
-	genTauDauEnergyNeutral[tcount]=energy_neutral;
-	genTauDauEnergyNeutrinos[tcount]=energy_neutrinos;
-	
-	genTauDauPxLeptonic[tcount]=px_leptonic;
-	genTauDauPxCharged[tcount]=px_charged;
-	genTauDauPxNeutral[tcount]=px_neutral;
-	genTauDauPxNeutrinos[tcount]=px_neutrinos;
-	genTauDauPyLeptonic[tcount]=py_leptonic;
-	genTauDauPyCharged[tcount]=py_charged;
-	genTauDauPyNeutral[tcount]=py_neutral;
-	genTauDauPyNeutrinos[tcount]=py_neutrinos;
-	genTauDauPzLeptonic[tcount]=pz_leptonic;
-	genTauDauPzCharged[tcount]=pz_charged;
-	genTauDauPzNeutral[tcount]=pz_neutral;
-	genTauDauPzNeutrinos[tcount]=pz_neutrinos;
-
-	tcount++;
-      }
-    }
   }
 
-  length=count; genLepLength=lcount; genTauLength=tcount;
+  length=count; genLepLength=lcount;
   
   edm::LogVerbatim("JaredSusyEvent") << " Trigger decision  " << std::endl;
 
@@ -482,10 +220,10 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     if ( hltHandle->accept(index) ) {
       LogDebug("HLTEventSelector") << "Event selected by " << *i ;
       std::string trigName = *i;
-      if (trigName == "HLT_Jet180") mTempTreeHLT1JET=true;
+      if (trigName == "HLT_Jet180")      mTempTreeHLT1JET=true;
       if (trigName == "HLT_DiJetAve130") mTempTreeHLT2JET=true;
-      if (trigName == "HLT_MET50") mTempTreeHLT1MET1HT=true;
-      if (trigName == "HLT_Mu9") mTempTreeHLT1Muon=true; 
+      if (trigName == "HLT_MET50")       mTempTreeHLT1MET1HT=true;
+      if (trigName == "HLT_Mu9")         mTempTreeHLT1Muon=true; 
       
     } 
   }
@@ -520,73 +258,6 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     mTempTreeVtxdZ[i]   = pVertex->zError();
   } 
 
-  // get the photons
-  edm::Handle< std::vector<pat::Photon> > photHandle;
-  iEvent.getByLabel(photTag_, photHandle);
-  if ( !photHandle.isValid() ) {
-    edm::LogWarning("JaredSusyEvent") << "No Photon results for InputTag " << photTag_;
-    return;
-  }
-
-  // get the cc photons
-  edm::Handle< std::vector<pat::Photon> > ccPhotHandle;
-  iEvent.getByLabel(ccphotTag_, ccPhotHandle);
-  if ( !ccPhotHandle.isValid() ) {
-    edm::LogWarning("JaredSusyEvent") << "No cc Photon results for InputTag " << ccphotTag_;
-    return;
-  }
-  edm::LogVerbatim("JaredSusyEvent") << " start reading in photons " << endl;
-
-  // Add the photons
-  mTempTreeNphot = photHandle->size();
-  if ( mTempTreeNphot > 50 ) mTempTreeNphot = 50;
-  for (int i=0;i<mTempTreeNphot;i++){
-   
-    mTempTreePhotPt[i]          = (*photHandle)[i].pt();
-    mTempTreePhotE[i]           = (*photHandle)[i].energy();
-    mTempTreePhotEt[i]          = (*photHandle)[i].et();
-    mTempTreePhotPx[i]          = (*photHandle)[i].momentum().X();
-    mTempTreePhotPy[i]          = (*photHandle)[i].momentum().Y();
-    mTempTreePhotPz[i]          = (*photHandle)[i].momentum().Z();
-    mTempTreePhotEta[i]         = (*photHandle)[i].eta();
-    mTempTreePhotPhi[i]         = (*photHandle)[i].phi();
-    mTempTreePhotTrkIso[i]      = (*photHandle)[i].trackIso();
-    mTempTreePhotECalIso[i]     = (*photHandle)[i].ecalIso();
-    mTempTreePhotHCalIso[i]     = (*photHandle)[i].hcalIso();
-    mTempTreePhotAllIso[i]      = (*photHandle)[i].caloIso();
-    mTempTreePhotLooseEM[i]     = (*photHandle)[i].photonID()->isLooseEM();
-    mTempTreePhotLoosePhoton[i] = (*photHandle)[i].photonID()->isLoosePhoton();
-    mTempTreePhotTightPhoton[i] = (*photHandle)[i].photonID()->isTightPhoton();
-
-    mTempTreeccPhotAssoc[i] = false;
-    for (unsigned int n=0;n < ccPhotHandle->size();n++){	
-      if((*photHandle)[i].originalObjectRef() == (*ccPhotHandle)[n].originalObjectRef()){
-	mTempTreeccPhotAssoc[i] = true;
-      }
-    } // loop over cross-cleaned pat::Photons
-
-    // GenPhoton info
-    reco::Particle*  part = const_cast<reco::Particle*>( (*photHandle)[i].genPhoton() );
-    reco::Candidate* cand = dynamic_cast<reco::Candidate*>( part );
-    if ( cand ) {
-      mTempTreeGenPhotPdgId[i] = cand->pdgId();   
-      mTempTreeGenPhotPx[i]    = cand->px();
-      mTempTreeGenPhotPy[i]    = cand->py();
-      mTempTreeGenPhotPz[i]    = cand->pz();
-      const reco::Candidate* mother = cand->mother();
-      if ( mother && cand->pdgId() == cand->mother()->pdgId() ) { mother = mother->mother(); }
-      if ( mother ) {
-	mTempTreeGenPhotMother[i] = mother->pdgId();
-      }
-    } else {
-      mTempTreeGenPhotPdgId[i] = 1.e8; // ie, invalid PDG id! 
-      mTempTreeGenPhotPx[i]=1.e8;
-      mTempTreeGenPhotPy[i]=1.e8;
-      mTempTreeGenPhotPz[i]=1.e8;
-      mTempTreeGenPhotMother[i] = 1.e8;
-    }
-  } // loop over pat::Photons
-
   // get the electrons
   edm::Handle< std::vector<pat::Electron> > elecHandle;
   iEvent.getByLabel(elecTag_, elecHandle);
@@ -595,132 +266,117 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     return;
   }
 
-  // get the ccelectrons
-  edm::Handle< std::vector<pat::Electron> > ccelecHandle;
-  iEvent.getByLabel(ccelecTag_, ccelecHandle);
-  if ( !ccelecHandle.isValid() ) {
-    edm::LogWarning("JaredSusyEvent") << "No ccElectron results for InputTag " << ccelecTag_;
-    return;
-  }
   
   edm::LogVerbatim("JaredSusyEvent") << " start reading in electrons " << endl;
   // Add the electrons
   mTempTreeNelec= elecHandle->size();
   if ( mTempTreeNelec > 50 ) mTempTreeNelec = 50;
   for (int i=0;i<mTempTreeNelec;i++){
-    if ((*elecHandle)[i].pt()>10){
-      mTempTreeElecE[i]      = (*elecHandle)[i].energy();
-      mTempTreeElecEt[i]     = (*elecHandle)[i].et();
-      mTempTreeElecPt[i]     = (*elecHandle)[i].pt();
-      mTempTreeElecPx[i]     = (*elecHandle)[i].momentum().X();
-      mTempTreeElecPy[i]     = (*elecHandle)[i].momentum().Y();
-      mTempTreeElecPz[i]     = (*elecHandle)[i].momentum().Z();
-      mTempTreeElecEta[i]    = (*elecHandle)[i].eta();
-      mTempTreeElecPhi[i]    = (*elecHandle)[i].phi();
-      mTempTreeElecTrkIso[i] = (*elecHandle)[i].trackIso();
-      
-      mTempTreeElecECalIso[i] = (*elecHandle)[i].ecalIso();
-      mTempTreeElecHCalIso[i] = (*elecHandle)[i].hcalIso() ;
-      mTempTreeElecAllIso[i]  = (*elecHandle)[i].caloIso() ;
-      mTempTreeElecCharge[i]  = (*elecHandle)[i].charge();
-      
-      mTempTreeElecECalIsoDeposit[i]  = (*elecHandle)[i].ecalIsoDeposit()->candEnergy() ;
-      mTempTreeElecHCalIsoDeposit[i]  = (*elecHandle)[i].hcalIsoDeposit()->candEnergy() ;
-      
-      mTempTreeElecIdLoose[i]    = (*elecHandle)[i].electronID("eidLoose");
-      mTempTreeElecIdTight[i]    = (*elecHandle)[i].electronID("eidTight");
-      mTempTreeElecIdRobLoose[i] = (*elecHandle)[i].electronID("eidRobustLoose");
-      mTempTreeElecIdRobTight[i] = (*elecHandle)[i].electronID("eidRobustTight"); 
-      
-      mTempTreeElecCaloEnergy[i] = (*elecHandle)[i].caloEnergy();
-      mTempTreeElecHOverE[i]     = (*elecHandle)[i].hadronicOverEm();
-      mTempTreeElecVx[i]         = (*elecHandle)[i].vx();
-      mTempTreeElecVy[i]         = (*elecHandle)[i].vy();
-      mTempTreeElecVz[i]         = (*elecHandle)[i].vz();
-      
-      edm::LogVerbatim("JaredSusyEvent") << " before asking for gsfTrack " << endl;
-      mTempTreeElecD0[i]               = (*elecHandle)[i].gsfTrack()->d0();
-      mTempTreeElecDz[i]               = (*elecHandle)[i].gsfTrack()->dz();
-      mTempTreeElecChargeMode[i]       = (*elecHandle)[i].gsfTrack()->chargeMode();	
-      mTempTreeElecPtTrkMode[i]        = (*elecHandle)[i].gsfTrack()->ptMode();
-      mTempTreeElecQOverPErrTrkMode[i] = (*elecHandle)[i].gsfTrack()->qoverpModeError();
-      mTempTreeElecCharge[i]           = (*elecHandle)[i].gsfTrack()->charge();
-      mTempTreeElecPtTrk[i]            = (*elecHandle)[i].gsfTrack()->pt();
-      mTempTreeElecQOverPErrTrk[i]     = (*elecHandle)[i].gsfTrack()->qoverpError();
-      mTempTreeElecNormChi2[i]         = (*elecHandle)[i].gsfTrack()->normalizedChi2();
-      mTempTreeElecLostHits[i]         = (*elecHandle)[i].gsfTrack()->lost();
-      mTempTreeElecValidHits[i]        = (*elecHandle)[i].gsfTrack()->found();
-      
-      edm::LogVerbatim("JaredSusyEvent") << " before asking for trackMomentumAtVtx " << endl;
-      
-      try {
-	mTempTreeElecNCluster[i] = (*elecHandle)[i].numberOfClusters();
-      } catch ( const cms::Exception& e ) {
-	mTempTreeElecNCluster[i] = -999;
-	std::stringstream ss;
-	ss << " cms::Exception caught!"
-	   << " Invalid edm::Ref<reco::SuperCluster> returned from pat::Electron!" 
-	   << std::endl 
-	   << " Setting numberOfClusters to -999!"
-	   << std::endl 
-	   << " Output from cms::Exception::what():"
-	   << std::endl 
-	   << e.what();
-	edm::LogWarning("JaredSusyEvent") << ss.str();
+    mTempTreeElecE[i]      = (*elecHandle)[i].energy();
+    mTempTreeElecEt[i]     = (*elecHandle)[i].et();
+    mTempTreeElecPt[i]     = (*elecHandle)[i].pt();
+    mTempTreeElecPx[i]     = (*elecHandle)[i].momentum().X();
+    mTempTreeElecPy[i]     = (*elecHandle)[i].momentum().Y();
+    mTempTreeElecPz[i]     = (*elecHandle)[i].momentum().Z();
+    mTempTreeElecEta[i]    = (*elecHandle)[i].eta();
+    mTempTreeElecPhi[i]    = (*elecHandle)[i].phi();
+    mTempTreeElecTrkIso[i] = (*elecHandle)[i].trackIso();
+
+    mTempTreeElecECalIso[i] = (*elecHandle)[i].ecalIso();
+    mTempTreeElecHCalIso[i] = (*elecHandle)[i].hcalIso() ;
+    mTempTreeElecAllIso[i]  = (*elecHandle)[i].caloIso() ;
+    mTempTreeElecCharge[i]  = (*elecHandle)[i].charge();
+
+    mTempTreeElecECalIsoDeposit[i]  = (*elecHandle)[i].ecalIsoDeposit()->candEnergy() ;
+    mTempTreeElecHCalIsoDeposit[i]  = (*elecHandle)[i].hcalIsoDeposit()->candEnergy() ;
+
+    mTempTreeElecIdLoose[i]    = (*elecHandle)[i].electronID("eidLoose");
+    mTempTreeElecIdTight[i]    = (*elecHandle)[i].electronID("eidTight");
+    mTempTreeElecIdRobLoose[i] = (*elecHandle)[i].electronID("eidRobustLoose");
+    mTempTreeElecIdRobTight[i] = (*elecHandle)[i].electronID("eidRobustTight"); 
+
+    mTempTreeElecCaloEnergy[i] = (*elecHandle)[i].caloEnergy();
+    mTempTreeElecHOverE[i]     = (*elecHandle)[i].hadronicOverEm();
+    mTempTreeElecVx[i]         = (*elecHandle)[i].vx();
+    mTempTreeElecVy[i]         = (*elecHandle)[i].vy();
+    mTempTreeElecVz[i]         = (*elecHandle)[i].vz();
+
+    edm::LogVerbatim("JaredSusyEvent") << " before asking for gsfTrack " << endl;
+    mTempTreeElecD0[i]               = (*elecHandle)[i].gsfTrack()->d0();
+    mTempTreeElecDz[i]               = (*elecHandle)[i].gsfTrack()->dz();
+    mTempTreeElecChargeMode[i]       = (*elecHandle)[i].gsfTrack()->chargeMode();	
+    mTempTreeElecPtTrkMode[i]        = (*elecHandle)[i].gsfTrack()->ptMode();
+    mTempTreeElecQOverPErrTrkMode[i] = (*elecHandle)[i].gsfTrack()->qoverpModeError();
+    mTempTreeElecCharge[i]           = (*elecHandle)[i].gsfTrack()->charge();
+    mTempTreeElecPtTrk[i]            = (*elecHandle)[i].gsfTrack()->pt();
+    mTempTreeElecQOverPErrTrk[i]     = (*elecHandle)[i].gsfTrack()->qoverpError();
+    mTempTreeElecNormChi2[i]         = (*elecHandle)[i].gsfTrack()->normalizedChi2();
+    mTempTreeElecLostHits[i]         = (*elecHandle)[i].gsfTrack()->lost();
+    mTempTreeElecValidHits[i]        = (*elecHandle)[i].gsfTrack()->found();
+    
+    edm::LogVerbatim("JaredSusyEvent") << " before asking for trackMomentumAtVtx " << endl;
+    
+    //try {
+    //  mTempTreeElecNCluster[i] = (*elecHandle)[i].numberOfClusters();
+    //} catch ( const cms::Exception& e ) {
+    //  mTempTreeElecNCluster[i] = -999;
+    //  std::stringstream ss;
+    //  ss << " cms::Exception caught!"
+    //	 << " Invalid edm::Ref<reco::SuperCluster> returned from pat::Electron!" 
+    //	 << std::endl 
+    //	 << " Setting numberOfClusters to -999!"
+    //	 << std::endl 
+    //	 << " Output from cms::Exception::what():"
+    //	 << std::endl 
+    //	 << e.what();
+    //  edm::LogWarning("JaredSusyEvent") << ss.str();
+    //}
+    mTempTreeElecEtaTrk[i] = (*elecHandle)[i].trackMomentumAtVtx().Eta();
+    mTempTreeElecPhiTrk[i] = (*elecHandle)[i].trackMomentumAtVtx().Phi();
+
+    // Added protection statement, against missing SuperCluster collection in 2_1_X PatLayer1 samples
+    try { 
+      mTempTreeElecWidthClusterEta[i] = (*elecHandle)[i].superCluster()->etaWidth();
+      mTempTreeElecWidthClusterPhi[i] = (*elecHandle)[i].superCluster()->phiWidth();
+    } catch ( const cms::Exception& e ) {
+      mTempTreeElecWidthClusterEta[i]=-999.;
+      mTempTreeElecWidthClusterPhi[i]=-999.;
+      std::stringstream ss;
+      ss << " cms::Exception caught!"
+	 << " Invalid edm::Ref<reco::SuperCluster> returned from pat::Electron!" 
+	 << std::endl 
+	 << " Setting ClusterEta and ClusterPhi to -999.!" 
+	 << std::endl 
+	 << " Output from cms::Exception::what():"
+	 << std::endl 
+	 << e.what();
+      edm::LogWarning("JaredSusyEvent") << ss.str();
+    }
+    
+    mTempTreeElecPinTrk[i] = sqrt((*elecHandle)[i].trackMomentumAtVtx().Mag2());
+    mTempTreeElecPoutTrk[i] = sqrt((*elecHandle)[i].trackMomentumOut().Mag2());
+
+    if (&(*(*elecHandle)[i].genLepton())!=0){
+      mTempTreeGenElecPdgId[i] = (*elecHandle)[i].genLepton()->pdgId();
+      mTempTreeGenElecPx[i]    = (*elecHandle)[i].genLepton()->px();
+      mTempTreeGenElecPy[i]    = (*elecHandle)[i].genLepton()->py();
+      mTempTreeGenElecPz[i]    = (*elecHandle)[i].genLepton()->pz();
+      if(&(*(*elecHandle)[i].genLepton()->mother())!=0){
+	mTempTreeGenElecMother[i] = (*elecHandle)[i].genLepton()->mother()->pdgId();
+	if ( (*elecHandle)[i].genLepton()->mother()->pdgId() ==  (*elecHandle)[i].genLepton()->pdgId()) 
+	  {
+	    mTempTreeGenElecMother[i] = (*elecHandle)[i].genLepton()->mother()->mother()->pdgId();
+	  }
       }
-      mTempTreeElecEtaTrk[i] = (*elecHandle)[i].trackMomentumAtVtx().Eta();
-      mTempTreeElecPhiTrk[i] = (*elecHandle)[i].trackMomentumAtVtx().Phi();
-      
-      // Added protection statement, against missing SuperCluster collection in 2_1_X PatLayer1 samples
-      try { 
-	mTempTreeElecWidthClusterEta[i] = (*elecHandle)[i].superCluster()->etaWidth();
-	mTempTreeElecWidthClusterPhi[i] = (*elecHandle)[i].superCluster()->phiWidth();
-      } catch ( const cms::Exception& e ) {
-	mTempTreeElecWidthClusterEta[i]=-999.;
-	mTempTreeElecWidthClusterPhi[i]=-999.;
-	std::stringstream ss;
-	ss << " cms::Exception caught!"
-	   << " Invalid edm::Ref<reco::SuperCluster> returned from pat::Electron!" 
-	   << std::endl 
-	   << " Setting ClusterEta and ClusterPhi to -999.!" 
-	   << std::endl 
-	   << " Output from cms::Exception::what():"
-	   << std::endl 
-	   << e.what();
-	edm::LogWarning("JaredSusyEvent") << ss.str();
-      }
-      
-      mTempTreeElecPinTrk[i] = sqrt((*elecHandle)[i].trackMomentumAtVtx().Mag2());
-      mTempTreeElecPoutTrk[i] = sqrt((*elecHandle)[i].trackMomentumOut().Mag2());
-      
-      if (&(*(*elecHandle)[i].genLepton())!=0){
-	mTempTreeGenElecPdgId[i] = (*elecHandle)[i].genLepton()->pdgId();
-	mTempTreeGenElecPx[i]    = (*elecHandle)[i].genLepton()->px();
-	mTempTreeGenElecPy[i]    = (*elecHandle)[i].genLepton()->py();
-	mTempTreeGenElecPz[i]    = (*elecHandle)[i].genLepton()->pz();
-	if(&(*(*elecHandle)[i].genLepton()->mother())!=0){
-	  mTempTreeGenElecMother[i] = (*elecHandle)[i].genLepton()->mother()->pdgId();
-	  if ( (*elecHandle)[i].genLepton()->mother()->pdgId() ==  (*elecHandle)[i].genLepton()->pdgId()) 
-	    {
-	      mTempTreeGenElecMother[i] = (*elecHandle)[i].genLepton()->mother()->mother()->pdgId();
-	    }
-	}
-      }
-      else {
-	mTempTreeGenElecPdgId[i]  = 999.;
-	mTempTreeGenElecPx[i]     = 999.;
-	mTempTreeGenElecPy[i]     = 999.;
-	mTempTreeGenElecPz[i]     = 999.;
-	mTempTreeGenElecMother[i] = 999.;
-      }
-      
-      mTempTreeccElecAssoc[i] = false;
-      for (unsigned int n=0;n< ccelecHandle->size();n++){	
-	if((*elecHandle)[i].originalObjectRef() == (*ccelecHandle)[n].originalObjectRef()){
-	  mTempTreeccElecAssoc[i] = true;
-	}
-      }//end loop over cc Electrons
-    }// check on electron pt
+    }
+    else {
+      mTempTreeGenElecPdgId[i]  = 999.;
+      mTempTreeGenElecPx[i]     = 999.;
+      mTempTreeGenElecPy[i]     = 999.;
+      mTempTreeGenElecPz[i]     = 999.;
+      mTempTreeGenElecMother[i] = 999.;
+    }
+
   }//end loop over Electrons
 
   // get the muons
@@ -731,13 +387,6 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     return;
   }
   
-  // get the ccmuons
-  edm::Handle< std::vector<pat::Muon> > ccmuonHandle;
-  iEvent.getByLabel(ccmuonTag_, ccmuonHandle);
-  if ( !ccmuonHandle.isValid() ) {
-    edm::LogWarning("JaredSusyEvent") << "No ccMuon results for InputTag " << ccmuonTag_;
-    return;
-  }
   edm::LogVerbatim("JaredSusyEvent") << " start reading in muons " << endl;
 
 
@@ -745,139 +394,140 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   mTempTreeNmuon= muonHandle->size();
   if ( mTempTreeNmuon > 50 ) mTempTreeNmuon = 50;
   for (int i=0;i<mTempTreeNmuon;i++){
-    if ((*muonHandle)[i].pt()>10) {
-      mTempTreeMuonPt[i]                     = (*muonHandle)[i].pt();
-      mTempTreeMuonE[i]                      = (*muonHandle)[i].energy();
-      mTempTreeMuonEt[i]                     = (*muonHandle)[i].et();
-      mTempTreeMuonPx[i]                     = (*muonHandle)[i].momentum().X();
-      mTempTreeMuonPy[i]                     = (*muonHandle)[i].momentum().Y();
-      mTempTreeMuonPz[i]                     = (*muonHandle)[i].momentum().Z();
-      mTempTreeMuonEta[i]                    = (*muonHandle)[i].eta();
-      mTempTreeMuonPhi[i]                    = (*muonHandle)[i].phi();
-      mTempTreeMuonTrkIso[i]                 = (*muonHandle)[i].trackIso();
-      mTempTreeMuonCharge[i]                 = (*muonHandle)[i].charge();
-      mTempTreeMuonECalIso[i]                = (*muonHandle)[i].ecalIso();
-      mTempTreeMuonHCalIso[i]                = (*muonHandle)[i].hcalIso() ;
-      mTempTreeMuonAllIso[i]                 = (*muonHandle)[i].caloIso() ;
-      mTempTreeMuonIsGlobal[i]               = (*muonHandle)[i].isGlobalMuon();
-      mTempTreeMuonIsStandAlone[i]           = (*muonHandle)[i].isStandAloneMuon();
-      mTempTreeMuonIsTracker[i]              = (*muonHandle)[i].isTrackerMuon();
-      mTempTreeMuonIsGlobalTight[i]          = (*muonHandle)[i].isGood(pat::Muon::SelectionType(6));
-      mTempTreeMuonIsTMLastStationLoose[i]   = (*muonHandle)[i].isGood(pat::Muon::SelectionType(7));
-      mTempTreeMuonTMLastStationTight[i]     = (*muonHandle)[i].isGood(pat::Muon::SelectionType(8));
-      mTempTreeMuonTM2DCompatibilityLoose[i] = (*muonHandle)[i].isGood(pat::Muon::SelectionType(9));
-      mTempTreeMuonTM2DCompatibilityTight[i] = (*muonHandle)[i].isGood(pat::Muon::SelectionType(10));
+   
+    mTempTreeMuonPt[i]                     = (*muonHandle)[i].pt();
+    mTempTreeMuonE[i]                      = (*muonHandle)[i].energy();
+    mTempTreeMuonEt[i]                     = (*muonHandle)[i].et();
+    mTempTreeMuonPx[i]                     = (*muonHandle)[i].momentum().X();
+    mTempTreeMuonPy[i]                     = (*muonHandle)[i].momentum().Y();
+    mTempTreeMuonPz[i]                     = (*muonHandle)[i].momentum().Z();
+    mTempTreeMuonEta[i]                    = (*muonHandle)[i].eta();
+    mTempTreeMuonPhi[i]                    = (*muonHandle)[i].phi();
+    mTempTreeMuonTrkIso[i]                 = (*muonHandle)[i].trackIso();
+    mTempTreeMuonCharge[i]                 = (*muonHandle)[i].charge();
+    mTempTreeMuonECalIso[i]                = (*muonHandle)[i].ecalIso();
+    mTempTreeMuonHCalIso[i]                = (*muonHandle)[i].hcalIso() ;
+    mTempTreeMuonAllIso[i]                 = (*muonHandle)[i].caloIso() ;
+    mTempTreeMuonIsGlobal[i]               = (*muonHandle)[i].isGlobalMuon();
+    mTempTreeMuonIsStandAlone[i]           = (*muonHandle)[i].isStandAloneMuon();
+    mTempTreeMuonIsTracker[i]              = (*muonHandle)[i].isTrackerMuon();
+    //mTempTreeMuonIsGlobalTight[i]          = (*muonHandle)[i].isGood(pat::Muon::SelectionType(6));
+    //mTempTreeMuonIsTMLastStationLoose[i]   = (*muonHandle)[i].isGood(pat::Muon::SelectionType(7));
+    //mTempTreeMuonTMLastStationTight[i]     = (*muonHandle)[i].isGood(pat::Muon::SelectionType(8));
+    //mTempTreeMuonTM2DCompatibilityLoose[i] = (*muonHandle)[i].isGood(pat::Muon::SelectionType(9));
+    //mTempTreeMuonTM2DCompatibilityTight[i] = (*muonHandle)[i].isGood(pat::Muon::SelectionType(10));
+
+    //mTempTreeMuonIsGlobalTight[i]          = (*muonHandle)[i].isGood(MuonSelectors::SelectionType(6));
+    //mTempTreeMuonIsTMLastStationLoose[i]   = (*muonHandle)[i].isGood(MuonSelectors::SelectionType(7));
+    //mTempTreeMuonTMLastStationTight[i]     = (*muonHandle)[i].isGood(MuonSelectors::SelectionType(8));
+    //mTempTreeMuonTM2DCompatibilityLoose[i] = (*muonHandle)[i].isGood(MuonSelectors::SelectionType(9));
+    //mTempTreeMuonTM2DCompatibilityTight[i] = (*muonHandle)[i].isGood(MuonSelectors::SelectionType(10));
     
-      mTempTreeMuonECalIsoDeposit[i]  = (*muonHandle)[i].ecalIsoDeposit()->candEnergy() ;
-      mTempTreeMuonHCalIsoDeposit[i]  = (*muonHandle)[i].hcalIsoDeposit()->candEnergy() ;
+    mTempTreeMuonECalIsoDeposit[i]  = (*muonHandle)[i].ecalIsoDeposit()->candEnergy() ;
+    mTempTreeMuonHCalIsoDeposit[i]  = (*muonHandle)[i].hcalIsoDeposit()->candEnergy() ;
 
-      // Vertex info is stored only for GlobalMuons (combined muons)
-      if((*muonHandle)[i].isGlobalMuon() && (*muonHandle)[i].combinedMuon().isNonnull()){ 
+    // Vertex info is stored only for GlobalMuons (combined muons)
+    if((*muonHandle)[i].isGlobalMuon() && (*muonHandle)[i].combinedMuon().isNonnull()){ 
 
-	mTempTreeMuonCombChi2[i] = (*muonHandle)[i].combinedMuon()->chi2();
-	mTempTreeMuonCombNdof[i] = (*muonHandle)[i].combinedMuon()->ndof();
+      mTempTreeMuonCombChi2[i] = (*muonHandle)[i].combinedMuon()->chi2();
+      mTempTreeMuonCombNdof[i] = (*muonHandle)[i].combinedMuon()->ndof();
 
-	mTempTreeMuonCombVx[i] = (*muonHandle)[i].combinedMuon()->vx();
-	mTempTreeMuonCombVy[i] = (*muonHandle)[i].combinedMuon()->vy();
-	mTempTreeMuonCombVz[i] = (*muonHandle)[i].combinedMuon()->vz();
-	mTempTreeMuonCombD0[i] = (*muonHandle)[i].combinedMuon()->d0();
-	mTempTreeMuonCombDz[i] = (*muonHandle)[i].combinedMuon()->dz();
+      mTempTreeMuonCombVx[i] = (*muonHandle)[i].combinedMuon()->vx();
+      mTempTreeMuonCombVy[i] = (*muonHandle)[i].combinedMuon()->vy();
+      mTempTreeMuonCombVz[i] = (*muonHandle)[i].combinedMuon()->vz();
+      mTempTreeMuonCombD0[i] = (*muonHandle)[i].combinedMuon()->d0();
+      mTempTreeMuonCombDz[i] = (*muonHandle)[i].combinedMuon()->dz();
 
+    } else {
+      mTempTreeMuonCombVx[i] = 999.;
+      mTempTreeMuonCombVy[i] = 999.;
+      mTempTreeMuonCombVz[i] = 999.;
+      mTempTreeMuonCombD0[i] = 999.;
+      mTempTreeMuonCombDz[i] = 999.;
+    }
+
+    if((*muonHandle)[i].isStandAloneMuon() && (*muonHandle)[i].standAloneMuon().isNonnull()){
+      mTempTreeMuonStandValidHits[i]   = (*muonHandle)[i].standAloneMuon()->found();
+      mTempTreeMuonStandLostHits[i]    = (*muonHandle)[i].standAloneMuon()->lost();
+      mTempTreeMuonStandPt[i]          = (*muonHandle)[i].standAloneMuon()->pt();
+      mTempTreeMuonStandPz[i]          = (*muonHandle)[i].standAloneMuon()->pz();
+      mTempTreeMuonStandP[i]           = (*muonHandle)[i].standAloneMuon()->p();
+      mTempTreeMuonStandEta[i]         = (*muonHandle)[i].standAloneMuon()->eta();
+      mTempTreeMuonStandPhi[i]         = (*muonHandle)[i].standAloneMuon()->phi();
+      mTempTreeMuonStandChi[i]         = (*muonHandle)[i].standAloneMuon()->chi2();
+      mTempTreeMuonStandCharge[i]      = (*muonHandle)[i].standAloneMuon()->charge();
+      mTempTreeMuonStandQOverPError[i] = (*muonHandle)[i].standAloneMuon()->qoverpError();
+    } 
+    else{
+      mTempTreeMuonStandValidHits[i]   = 999.;
+      mTempTreeMuonStandLostHits[i]    = 999.;
+      mTempTreeMuonStandPt[i]          = 999.;
+      mTempTreeMuonStandPz[i]          = 999.;
+      mTempTreeMuonStandP[i]           = 999.;
+      mTempTreeMuonStandEta[i]         = 999.;
+      mTempTreeMuonStandPhi[i]         = 999.;
+      mTempTreeMuonStandChi[i]         = 999.;
+      mTempTreeMuonStandCharge[i]      = 999.;
+      mTempTreeMuonStandQOverPError[i] = 999.;
+    }
+
+    if((*muonHandle)[i].isTrackerMuon() && (*muonHandle)[i].track().isNonnull()){
+      mTempTreeMuonTrkChiNorm[i]     = (*muonHandle)[i].track()->normalizedChi2();
+      mTempTreeMuonTrkValidHits[i]   = (*muonHandle)[i].track()->found();
+      mTempTreeMuonTrkLostHits[i]    = (*muonHandle)[i].track()->lost();
+      mTempTreeMuonTrkD0[i]          = (*muonHandle)[i].track()->d0();
+      mTempTreeMuonTrkPt[i]          = (*muonHandle)[i].track()->pt();
+      mTempTreeMuonTrkPz[i]          = (*muonHandle)[i].track()->pz();
+      mTempTreeMuonTrkP[i]           = (*muonHandle)[i].track()->p();
+      mTempTreeMuonTrkEta[i]         = (*muonHandle)[i].track()->eta();
+      mTempTreeMuonTrkPhi[i]         = (*muonHandle)[i].track()->phi();
+      mTempTreeMuonTrkChi[i]         = (*muonHandle)[i].track()->chi2();
+      mTempTreeMuonTrkCharge[i]      = (*muonHandle)[i].track()->charge();
+      mTempTreeMuonTrkQOverPError[i] = (*muonHandle)[i].track()->qoverpError();
+      //  mTempTreeMuonTrkOuterZ[i]=(*muonHandle)[i].track()->outerZ();
+      //  mTempTreeMuonTrkOuterR[i]=(*muonHandle)[i].track()->outerRadius();
+
+    }
+    else{
+      mTempTreeMuonTrkChiNorm[i]    = 999.;
+      mTempTreeMuonTrkValidHits[i]  = 999.;
+      mTempTreeMuonTrkLostHits[i]   = 999.;
+      mTempTreeMuonTrkPt[i]         = 999.;
+      mTempTreeMuonTrkPz[i]         = 999.;
+      mTempTreeMuonTrkP[i]          = 999.;
+      mTempTreeMuonTrkEta[i]        = 999.;
+      mTempTreeMuonTrkPhi[i]        = 999.;
+      mTempTreeMuonTrkChi[i]        = 999.;
+      mTempTreeMuonTrkCharge[i]     = 999.;
+      mTempTreeMuonTrkQOverPError[i]= 999.;
+      mTempTreeMuonTrkOuterZ[i]     = 999.;
+      mTempTreeMuonTrkOuterR[i]     = 999.;
+    }
+
+    if (&(*(*muonHandle)[i].genLepton())!=0){
+      mTempTreeGenMuonPdgId[i] = (*muonHandle)[i].genLepton()->pdgId();
+      mTempTreeGenMuonPx[i]    = (*muonHandle)[i].genLepton()->px();
+      mTempTreeGenMuonPy[i]    = (*muonHandle)[i].genLepton()->py();
+      mTempTreeGenMuonPz[i]    = (*muonHandle)[i].genLepton()->pz();
+      if (&(*(*muonHandle)[i].genLepton()->mother())!=0) {
+	mTempTreeGenMuonMother[i] = (*muonHandle)[i].genLepton()->mother()->pdgId();
+	if ( (*muonHandle)[i].genLepton()->mother()->pdgId() ==  (*muonHandle)[i].genLepton()->pdgId()) 
+	  {
+	    mTempTreeGenMuonMother[i] = (*muonHandle)[i].genLepton()->mother()->mother()->pdgId();
+	  }
       } else {
-	mTempTreeMuonCombVx[i] = 999.;
-	mTempTreeMuonCombVy[i] = 999.;
-	mTempTreeMuonCombVz[i] = 999.;
-	mTempTreeMuonCombD0[i] = 999.;
-	mTempTreeMuonCombDz[i] = 999.;
-      }
-
-      if((*muonHandle)[i].isStandAloneMuon() && (*muonHandle)[i].standAloneMuon().isNonnull()){
-	mTempTreeMuonStandValidHits[i]   = (*muonHandle)[i].standAloneMuon()->found();
-	mTempTreeMuonStandLostHits[i]    = (*muonHandle)[i].standAloneMuon()->lost();
-	mTempTreeMuonStandPt[i]          = (*muonHandle)[i].standAloneMuon()->pt();
-	mTempTreeMuonStandPz[i]          = (*muonHandle)[i].standAloneMuon()->pz();
-	mTempTreeMuonStandP[i]           = (*muonHandle)[i].standAloneMuon()->p();
-	mTempTreeMuonStandEta[i]         = (*muonHandle)[i].standAloneMuon()->eta();
-	mTempTreeMuonStandPhi[i]         = (*muonHandle)[i].standAloneMuon()->phi();
-	mTempTreeMuonStandChi[i]         = (*muonHandle)[i].standAloneMuon()->chi2();
-	mTempTreeMuonStandCharge[i]      = (*muonHandle)[i].standAloneMuon()->charge();
-	mTempTreeMuonStandQOverPError[i] = (*muonHandle)[i].standAloneMuon()->qoverpError();
-      } 
-      else{
-	mTempTreeMuonStandValidHits[i]   = 999.;
-	mTempTreeMuonStandLostHits[i]    = 999.;
-	mTempTreeMuonStandPt[i]          = 999.;
-	mTempTreeMuonStandPz[i]          = 999.;
-	mTempTreeMuonStandP[i]           = 999.;
-	mTempTreeMuonStandEta[i]         = 999.;
-	mTempTreeMuonStandPhi[i]         = 999.;
-	mTempTreeMuonStandChi[i]         = 999.;
-	mTempTreeMuonStandCharge[i]      = 999.;
-	mTempTreeMuonStandQOverPError[i] = 999.;
-      }
-
-      if((*muonHandle)[i].isTrackerMuon() && (*muonHandle)[i].track().isNonnull()){
-	mTempTreeMuonTrkChiNorm[i]     = (*muonHandle)[i].track()->normalizedChi2();
-	mTempTreeMuonTrkValidHits[i]   = (*muonHandle)[i].track()->found();
-	mTempTreeMuonTrkLostHits[i]    = (*muonHandle)[i].track()->lost();
-	mTempTreeMuonTrkD0[i]          = (*muonHandle)[i].track()->d0();
-	mTempTreeMuonTrkPt[i]          = (*muonHandle)[i].track()->pt();
-	mTempTreeMuonTrkPz[i]          = (*muonHandle)[i].track()->pz();
-	mTempTreeMuonTrkP[i]           = (*muonHandle)[i].track()->p();
-	mTempTreeMuonTrkEta[i]         = (*muonHandle)[i].track()->eta();
-	mTempTreeMuonTrkPhi[i]         = (*muonHandle)[i].track()->phi();
-	mTempTreeMuonTrkChi[i]         = (*muonHandle)[i].track()->chi2();
-	mTempTreeMuonTrkCharge[i]      = (*muonHandle)[i].track()->charge();
-	mTempTreeMuonTrkQOverPError[i] = (*muonHandle)[i].track()->qoverpError();
-	//  mTempTreeMuonTrkOuterZ[i]=(*muonHandle)[i].track()->outerZ();
-	//  mTempTreeMuonTrkOuterR[i]=(*muonHandle)[i].track()->outerRadius();
-
-      }
-      else{
-	mTempTreeMuonTrkChiNorm[i]    = 999.;
-	mTempTreeMuonTrkValidHits[i]  = 999.;
-	mTempTreeMuonTrkLostHits[i]   = 999.;
-	mTempTreeMuonTrkPt[i]         = 999.;
-	mTempTreeMuonTrkPz[i]         = 999.;
-	mTempTreeMuonTrkP[i]          = 999.;
-	mTempTreeMuonTrkEta[i]        = 999.;
-	mTempTreeMuonTrkPhi[i]        = 999.;
-	mTempTreeMuonTrkChi[i]        = 999.;
-	mTempTreeMuonTrkCharge[i]     = 999.;
-	mTempTreeMuonTrkQOverPError[i]= 999.;
-	mTempTreeMuonTrkOuterZ[i]     = 999.;
-	mTempTreeMuonTrkOuterR[i]     = 999.;
-      }
-
-      if (&(*(*muonHandle)[i].genLepton())!=0){
-	mTempTreeGenMuonPdgId[i] = (*muonHandle)[i].genLepton()->pdgId();
-	mTempTreeGenMuonPx[i]    = (*muonHandle)[i].genLepton()->px();
-	mTempTreeGenMuonPy[i]    = (*muonHandle)[i].genLepton()->py();
-	mTempTreeGenMuonPz[i]    = (*muonHandle)[i].genLepton()->pz();
-	if (&(*(*muonHandle)[i].genLepton()->mother())!=0) {
-	  mTempTreeGenMuonMother[i] = (*muonHandle)[i].genLepton()->mother()->pdgId();
-	  if ( (*muonHandle)[i].genLepton()->mother()->pdgId() ==  (*muonHandle)[i].genLepton()->pdgId()) 
-	    {
-	      mTempTreeGenMuonMother[i] = (*muonHandle)[i].genLepton()->mother()->mother()->pdgId();
-	    }
-	} else {
-	  mTempTreeGenMuonMother[i] = 999.;
-	}
-      }
-      else{
-	mTempTreeGenMuonPdgId[i]  = 999.;
 	mTempTreeGenMuonMother[i] = 999.;
-	mTempTreeGenMuonPx[i]     = 999.;
-	mTempTreeGenMuonPy[i]     = 999.;
-	mTempTreeGenMuonPz[i]     = 999.;
       }
+    }
+    else{
+      mTempTreeGenMuonPdgId[i]  = 999.;
+      mTempTreeGenMuonMother[i] = 999.;
+      mTempTreeGenMuonPx[i]     = 999.;
+      mTempTreeGenMuonPy[i]     = 999.;
+      mTempTreeGenMuonPz[i]     = 999.;
+    }
 
-      mTempTreeccMuonAssoc[i] = false;
-      for (int n=0;n<mTempTreeNmuon;n++){	
-	if((*ccmuonHandle)[n].originalObjectRef() == (*muonHandle)[i].originalObjectRef())mTempTreeccMuonAssoc[i] = true;
-      }//end loop over cc Muons
-    }// check on muon pt
-  }// end for loop over Muons
+  }
 
   //get pthat of process
   mTempTreePthat = -999.;
@@ -931,34 +581,28 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   if( mTempTreeNPFjet > 50) mTempTreeNPFjet=50;
   for(int pf=0; pf< mTempTreeNPFjet; pf++){
-    mTempTreePFjetEta[pf]    = (*pfjetHandle)[pf].eta();
-    mTempTreePFjetPhi[pf]    = (*pfjetHandle)[pf].phi();
-    mTempTreePFjetE[pf]      = (*pfjetHandle)[pf].energy();
-    mTempTreePFjetPx[pf]     = (*pfjetHandle)[pf].px();
-    mTempTreePFjetPy[pf]     = (*pfjetHandle)[pf].py();
-    mTempTreePFjetPz[pf]     = (*pfjetHandle)[pf].pz();
-    mTempTreePFjetPt[pf]     = (*pfjetHandle)[pf].pt();
-    mTempTreePFjetCharge[pf] = (*pfjetHandle)[pf].charge();
-
-    if ((*pfjetHandle)[pf].pt()>jetMinPt_) {
-      if (fabs((*pfjetHandle)[pf].eta())<jetMaxEta_) pfsumpt+=(*pfjetHandle)[pf].pt();
-      pfsumpx += (*pfjetHandle)[pf].px();
-      pfsumpy += (*pfjetHandle)[pf].py();}
+    if ((*pfjetHandle)[pf].pt() > 10.) {
+      mTempTreePFjetEta[pf]    = (*pfjetHandle)[pf].eta();
+      mTempTreePFjetPhi[pf]    = (*pfjetHandle)[pf].phi();
+      mTempTreePFjetE[pf]      = (*pfjetHandle)[pf].energy();
+      mTempTreePFjetPx[pf]     = (*pfjetHandle)[pf].px();
+      mTempTreePFjetPy[pf]     = (*pfjetHandle)[pf].py();
+      mTempTreePFjetPz[pf]     = (*pfjetHandle)[pf].pz();
+      mTempTreePFjetPt[pf]     = (*pfjetHandle)[pf].pt();
+      mTempTreePFjetCharge[pf] = (*pfjetHandle)[pf].charge();
+    
+      if ((*pfjetHandle)[pf].pt()>jetMinPt_) {
+	if (fabs((*pfjetHandle)[pf].eta())<jetMaxEta_) pfsumpt+=(*pfjetHandle)[pf].pt();
+	pfsumpx += (*pfjetHandle)[pf].px();
+	pfsumpy += (*pfjetHandle)[pf].py();}
+    }
   }
-   
-  // get the jets
+
+  // get the calo jets
   edm::Handle< std::vector<pat::Jet> > jetHandle;
   iEvent.getByLabel(jetTag_, jetHandle);
   if ( !jetHandle.isValid() ) {
     edm::LogWarning("JaredSusyEvent") << "No Jet results for InputTag " << jetTag_;
-    return;
-  }
-
-  //Get the cross-cleaned Jets
-  edm::Handle< std::vector<pat::Jet> > ccjetHandle;
-  iEvent.getByLabel(ccjetTag_, ccjetHandle);
-  if ( !ccjetHandle.isValid() ) {
-    edm::LogWarning("JaredSusyEvent") << "No ccJet results for InputTag " << ccjetTag_;
     return;
   }
 
@@ -968,13 +612,6 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   if ( !jptHandle.isValid() ) {
     edm::LogWarning("JaredSusyEvent") << "No JetCorrFactor results for InputTag " << jptTag_;
     std::cout << "No JetCorrFactor results for InputTag " << jptTag_ << std::endl;
-    return;
-  }
-  // get the JPT-corrected *cross-cleaned* pat::Jets
-  edm::Handle< std::vector<pat::Jet> > ccJptHandle;
-  iEvent.getByLabel(ccJptTag_, ccJptHandle);
-  if ( !ccJptHandle.isValid() ) {
-    edm::LogWarning("JaredSusyEvent") << "No Jet results for InputTag " << ccJptTag_;
     return;
   }
 
@@ -994,28 +631,20 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   for (int k=0;k<mTempTreeNjets;k++){
     const pat::Jet& uncorrJet = ((*jetHandle)[k].isCaloJet())? (*jetHandle)[k].correctedJet("RAW"): (*jetHandle)[k];
     
-    mTempTreeccJetMCCorrFactor[i] = -9999.;
-    
-    if ( uncorrJet.pt() > 10. ) {
+    if ( (*jetHandle)[k].pt() > 10. ) {
 
-      jetsumpt += uncorrJet.pt();
-      jetsumpx += uncorrJet.momentum().X();
-      jetsumpy += uncorrJet.momentum().Y();
+      jetsumpt += (*jetHandle)[k].pt();
+      jetsumpx += (*jetHandle)[k].momentum().X();
+      jetsumpy += (*jetHandle)[k].momentum().Y();
       
-      if(uncorrJet.genJet()!= 0) {
-	gensumpt += uncorrJet.genJet()->pt();
-	gensumpx += uncorrJet.genJet()->momentum().X();
-	gensumpy += uncorrJet.genJet()->momentum().Y();}
+      if((*jetHandle)[k].genJet()!= 0) {
+	gensumpt += (*jetHandle)[k].genJet()->pt();
+	gensumpx += (*jetHandle)[k].genJet()->momentum().X();
+	gensumpy += (*jetHandle)[k].genJet()->momentum().Y();}
 
-      if (uncorrJet.pt()>jetMinPt_) {
-	if (fabs(uncorrJet.eta())<jetMaxEta_) {
+      if ((*jetHandle)[k].pt()>jetMinPt_) {
+	if (fabs((*jetHandle)[k].eta())<jetMaxEta_) {
 
-	  // Add corrections for original pat::Jet collections 
-	  mTempTreeJetMCCorrFactor[i]  = -9999.;
-	  mTempTreeJetJPTCorrFactor[i] = -9999.;
-	
-	  mTempTreeJetMCCorrFactor[i] = (uncorrJet.isCaloJet())? uncorrJet.jetCorrFactors().scaleDefault(): -1 ;
-	
 	  for ( uint16_t n = 0; n < ( jptHandle->size() > 50 ? 50 : jptHandle->size() ); n++ ) {
 	    if ( matchJetsByCaloTowers( (*jptHandle)[n], (*jetHandle)[k] ) ) {
 	      pat::Jet jpt( (*jptHandle)[n] ); // no corrections by default
@@ -1051,35 +680,35 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	  mTempTreeJetTrackPhiWeighted[k] = mTempTreeJetTrackPhiWeighted[k]/ mTempTreeJetTrackPt[k];
 	  mTempTreeJetTrackPhi[k]         = mTempTreeJetTrackPhi[k]/float(mTempTreeJetTrackNo[k]);
  
-	  mTempTreeJetsPt[i]  = uncorrJet.pt();
-	  mTempTreeJetsE[i]   = uncorrJet.energy();
-	  mTempTreeJetsEt[i]  = uncorrJet.et();
-	  mTempTreeJetsPx[i]  = uncorrJet.momentum().X();
-	  mTempTreeJetsPy[i]  = uncorrJet.momentum().Y();
-	  mTempTreeJetsPz[i]  = uncorrJet.momentum().Z();
-	  mTempTreeJetsEta[i] = uncorrJet.eta();
-	  mTempTreeJetsPhi[i] = uncorrJet.phi();
+	  mTempTreeJetsPt[i]  = (*jetHandle)[k].pt();
+	  mTempTreeJetsE[i]   = (*jetHandle)[k].energy();
+	  mTempTreeJetsEt[i]  = (*jetHandle)[k].et();
+	  mTempTreeJetsPx[i]  = (*jetHandle)[k].momentum().X();
+	  mTempTreeJetsPy[i]  = (*jetHandle)[k].momentum().Y();
+	  mTempTreeJetsPz[i]  = (*jetHandle)[k].momentum().Z();
+	  mTempTreeJetsEta[i] = (*jetHandle)[k].eta();
+	  mTempTreeJetsPhi[i] = (*jetHandle)[k].phi();
 	
-	  if (uncorrJet.isCaloJet())
-	    mTempTreeJetsFem[i] = uncorrJet.emEnergyFraction();
-	  if (uncorrJet.isPFJet())
-	    mTempTreeJetsFem[i] = uncorrJet.neutralEmEnergyFraction()+
-	      uncorrJet.chargedEmEnergyFraction();
+	  if ((*jetHandle)[k].isCaloJet())
+	    mTempTreeJetsFem[i] = (*jetHandle)[k].emEnergyFraction();
+	  if ((*jetHandle)[k].isPFJet())
+	    mTempTreeJetsFem[i] = (*jetHandle)[k].neutralEmEnergyFraction()+
+	      (*jetHandle)[k].chargedEmEnergyFraction();
       
-	  mTempTreeJetsBTag_TkCountHighEff[i] = uncorrJet.bDiscriminator("trackCountingHighEffBJetTags");
-	  mTempTreeJetsBTag_SimpleSecVtx[i]   = uncorrJet.bDiscriminator("simpleSecondaryVertexBJetTags");
-	  mTempTreeJetsBTag_CombSecVtx[i]     = uncorrJet.bDiscriminator("combinedSecondaryVertexBJetTags");
-	  mTempTreeJetPartonFlavour[i]        = uncorrJet.partonFlavour();
+	  mTempTreeJetsBTag_TkCountHighEff[i] = (*jetHandle)[k].bDiscriminator("trackCountingHighEffBJetTags");
+	  mTempTreeJetsBTag_SimpleSecVtx[i]   = (*jetHandle)[k].bDiscriminator("simpleSecondaryVertexBJetTags");
+	  mTempTreeJetsBTag_CombSecVtx[i]     = (*jetHandle)[k].bDiscriminator("combinedSecondaryVertexBJetTags");
+	  mTempTreeJetPartonFlavour[i]        = (*jetHandle)[k].partonFlavour();
 	
-	  if(uncorrJet.genJet()!= 0) {
-	    mTempTreeGenJetsPt[i]  = uncorrJet.genJet()->pt();
-	    mTempTreeGenJetsE[i]   = uncorrJet.genJet()->energy();
-	    mTempTreeGenJetsEt[i]  = uncorrJet.genJet()->et();
-	    mTempTreeGenJetsPx[i]  = uncorrJet.genJet()->momentum().X();
-	    mTempTreeGenJetsPy[i]  = uncorrJet.genJet()->momentum().Y();
-	    mTempTreeGenJetsPz[i]  = uncorrJet.genJet()->momentum().z();
-	    mTempTreeGenJetsEta[i] = uncorrJet.genJet()->eta();
-	    mTempTreeGenJetsPhi[i] = uncorrJet.genJet()->phi();
+	  if((*jetHandle)[k].genJet()!= 0) {
+	    mTempTreeGenJetsPt[i]  = (*jetHandle)[k].genJet()->pt();
+	    mTempTreeGenJetsE[i]   = (*jetHandle)[k].genJet()->energy();
+	    mTempTreeGenJetsEt[i]  = (*jetHandle)[k].genJet()->et();
+	    mTempTreeGenJetsPx[i]  = (*jetHandle)[k].genJet()->momentum().X();
+	    mTempTreeGenJetsPy[i]  = (*jetHandle)[k].genJet()->momentum().Y();
+	    mTempTreeGenJetsPz[i]  = (*jetHandle)[k].genJet()->momentum().z();
+	    mTempTreeGenJetsEta[i] = (*jetHandle)[k].genJet()->eta();
+	    mTempTreeGenJetsPhi[i] = (*jetHandle)[k].genJet()->phi();
 	  }
 	  else {
 	    mTempTreeGenJetsPt[i]  = -999;
@@ -1092,16 +721,16 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    mTempTreeGenJetsPhi[i] = -999;
 	  }
 	  
-	  if(uncorrJet.genParton() != 0){
-	    mTempTreeJetPartonId[i]     = uncorrJet.genParton()->pdgId();
-	    mTempTreeJetPartonPx[i]     = uncorrJet.genParton()->px();
-	    mTempTreeJetPartonPy[i]     = uncorrJet.genParton()->py();
-	    mTempTreeJetPartonPz[i]     = uncorrJet.genParton()->pz();
-	    mTempTreeJetPartonEt[i]     = uncorrJet.genParton()->et();
-	    mTempTreeJetPartonPhi[i]    = uncorrJet.genParton()->phi();
-	    mTempTreeJetPartonEta[i]    = uncorrJet.genParton()->eta();
-	    mTempTreeJetPartonEnergy[i] = uncorrJet.genParton()->energy();
-	    mTempTreeJetPartonMother[i] = uncorrJet.genParton()->mother()->pdgId();
+	  if((*jetHandle)[k].genParton() != 0){
+	    mTempTreeJetPartonId[i]     = (*jetHandle)[k].genParton()->pdgId();
+	    mTempTreeJetPartonPx[i]     = (*jetHandle)[k].genParton()->px();
+	    mTempTreeJetPartonPy[i]     = (*jetHandle)[k].genParton()->py();
+	    mTempTreeJetPartonPz[i]     = (*jetHandle)[k].genParton()->pz();
+	    mTempTreeJetPartonEt[i]     = (*jetHandle)[k].genParton()->et();
+	    mTempTreeJetPartonPhi[i]    = (*jetHandle)[k].genParton()->phi();
+	    mTempTreeJetPartonEta[i]    = (*jetHandle)[k].genParton()->eta();
+	    mTempTreeJetPartonEnergy[i] = (*jetHandle)[k].genParton()->energy();
+	    mTempTreeJetPartonMother[i] = (*jetHandle)[k].genParton()->mother()->pdgId();
 	  }
 	  else{
 	    mTempTreeJetPartonId[i]     = -999;
@@ -1114,34 +743,6 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	    mTempTreeJetPartonEnergy[i] = -999;
 	    mTempTreeJetPartonMother[i] = -999;
 	  }
-      
-	  mTempTreeccJetAssoc[i] = false;
-	
-	  mTempTreeJetMCCorrFactor[i] = -9999.;
-	  mTempTreeJetJPTCorrFactor[i] = -9999.;
-	
-	  // Add the cc jets
-	  int mTempTreeNccjets = ccjetHandle->size();
-	  if ( mTempTreeNccjets > 50 ) mTempTreeNccjets = 50;
-	  for ( int n = 0; n < mTempTreeNccjets; n++ ) {
-	    if ( (*ccjetHandle)[n].originalObjectRef() == (*jetHandle)[k].originalObjectRef() ) {
-	      pat::Jet jet = ((*ccjetHandle)[n].isCaloJet()) ? (*ccjetHandle)[n].correctedJet("RAW") : (*ccjetHandle)[n];
-	      mTempTreeccJetAssoc[i]      = true;
-	      mTempTreeccJetAssoc_E[i]    = jet.energy();
-	      mTempTreeccJetAssoc_px[i]   = jet.px();
-	      mTempTreeccJetAssoc_py[i]   = jet.py();
-	      mTempTreeccJetAssoc_pz[i]   = jet.pz();
-	      mTempTreeJetMCCorrFactor[i] = (jet.isCaloJet())? jet.jetCorrFactors().scaleDefault(): -1 ;
-	    }
-	  }
-	
-	  // "Mark" jets that have been removed by CC
-	  if ( mTempTreeccJetAssoc[i] == false ) {
-	    mTempTreeccJetAssoc_E[i]  = -9999;
-	    mTempTreeccJetAssoc_px[i] = -9999;
-	    mTempTreeccJetAssoc_py[i] = -9999;
-	    mTempTreeccJetAssoc_pz[i] = -9999;
-	  }
 	
 	  // Add the JPT corrs
 	  int mTempTreeNjptjets = jptHandle->size();
@@ -1149,7 +750,6 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 	  for ( int m = 0; m < mTempTreeNjptjets; m++ ) {
 	    if( (*jptHandle)[m].originalObjectRef() == (*jetHandle)[k].originalObjectRef() ) {
 	      pat::Jet jet = ((*jptHandle)[m].isCaloJet()) ? (*jptHandle)[m].correctedJet("RAW") : (*jptHandle)[m];
-	      mTempTreeJetJPTCorrFactor[i] = (jet.isCaloJet()) ? jet.jetCorrFactors().scaleDefault() : -1 ;
 	    }
 	  }
 	  i++;
@@ -1195,57 +795,57 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   }
   mTempTreeHemispheresdPhi = fabs(reco::deltaPhi(hemispheres[0].phi(),hemispheres[1].phi()));
 
-//  //
-//  // get the PF MET result
-//  //
-//  edm::Handle< std::vector<pat::MET> > pfmetHandle;
-//  iEvent.getByLabel(pfmetTag_, pfmetHandle);
-//  if ( !pfmetHandle.isValid() ) {
-//    edm::LogWarning("METEventSelector") << "No Met results for InputTag " << pfmetTag_;
-//    return;
-//  }
-//  //
-//  // sanity check on collection
-//  //
-//  if ( pfmetHandle->size()!=1 ) {
-//    edm::LogWarning("METEventSelector") << "MET collection size is "
-//					<< pfmetHandle->size() << " instead of 1";
-//    return;
-//  }
-// 
-//  if(pfmetHandle->front().genMET()!=NULL) {
-//    const reco::GenMET* myGenMet = pfmetHandle->front().genMET();
-//    mTempTreepfMET_Gen[0] = myGenMet->px();
-//    mTempTreepfMET_Gen[1] = myGenMet->py();
-//    mTempTreepfMET_Gen[2] = myGenMet->pz();
-//  }
-//  else{
-//    mTempTreepfMET_Gen[0] = -99999999;
-//    mTempTreepfMET_Gen[1] = -99999999;
-//    mTempTreepfMET_Gen[2] = -99999999;
-//  }
-//
-//  // Do the MET save for full corr no cc pfMET
-//  mTempTreepfMET_Fullcorr_nocc[0]           = pfmetHandle->front().momentum().X();
-//  mTempTreepfMET_Fullcorr_nocc[1]           = pfmetHandle->front().momentum().Y();
-//  mTempTreepfMET_Fullcorr_nocc[2]           = pfmetHandle->front().momentum().z();
-//  mTempTreepfMETphi_Fullcorr_nocc           = pfmetHandle->front().phi();
-//  mTempTreepfMET_Fullcorr_nocc_significance = pfmetHandle->front().mEtSig();
-//
-//  // Do the MET save for no corr no cc pfMET
-//  mTempTreepfMET_Nocorr_nocc[0] = pfmetHandle->front().corEx();//uncorr to bare bones
-//  mTempTreepfMET_Nocorr_nocc[1] = pfmetHandle->front().corEy(pat::MET::UncorrectionType(0));//uncorr to bare bones
-//  mTempTreepfMETphi_Nocorr_nocc = pfmetHandle->front().uncorrectedPhi(pat::MET::UncorrectionType(0));//uncorr to bare bones
-//
-//  // Do the MET save for muon corr no cc pfMET
-//  mTempTreepfMET_Muoncorr_nocc[0] = pfmetHandle->front().corEx(pat::MET::UncorrectionType(1));//uncorr for JEC
-//  mTempTreepfMET_Muoncorr_nocc[1] = pfmetHandle->front().corEy(pat::MET::UncorrectionType(1));//uncorr for JEC 
-//  mTempTreepfMETphi_Muoncorr_nocc = pfmetHandle->front().uncorrectedPhi(pat::MET::UncorrectionType(1));//uncorr for JEC
-//
-//  // Do the MET save for JEC corr no cc pfMET
-//  mTempTreepfMET_JECcorr_nocc[0] = pfmetHandle->front().corEx(pat::MET::UncorrectionType(2));//uncorr for muons
-//  mTempTreepfMET_JECcorr_nocc[1] = pfmetHandle->front().corEy(pat::MET::UncorrectionType(2));//uncorr for muons
-//  mTempTreepfMETphi_JECcorr_nocc = pfmetHandle->front().uncorrectedPhi(pat::MET::UncorrectionType(2));//uncorr for muons
+  //
+  // get the PF MET result
+  //
+  edm::Handle< std::vector<pat::MET> > pfmetHandle;
+  iEvent.getByLabel(pfmetTag_, pfmetHandle);
+  if ( !pfmetHandle.isValid() ) {
+    edm::LogWarning("METEventSelector") << "No Met results for InputTag " << pfmetTag_;
+    return;
+  }
+  //
+  // sanity check on collection
+  //
+  if ( pfmetHandle->size()!=1 ) {
+    edm::LogWarning("METEventSelector") << "MET collection size is "
+					<< pfmetHandle->size() << " instead of 1";
+    return;
+  }
+ 
+  if(pfmetHandle->front().genMET()!=NULL) {
+    const reco::GenMET* myGenMet = pfmetHandle->front().genMET();
+    mTempTreepfMET_Gen[0] = myGenMet->px();
+    mTempTreepfMET_Gen[1] = myGenMet->py();
+    mTempTreepfMET_Gen[2] = myGenMet->pz();
+  }
+  else{
+    mTempTreepfMET_Gen[0] = -99999999;
+    mTempTreepfMET_Gen[1] = -99999999;
+    mTempTreepfMET_Gen[2] = -99999999;
+  }
+
+  // Do the MET save for full corr no cc pfMET
+  mTempTreepfMET_Fullcorr_nocc[0]           = pfmetHandle->front().momentum().X();
+  mTempTreepfMET_Fullcorr_nocc[1]           = pfmetHandle->front().momentum().Y();
+  mTempTreepfMET_Fullcorr_nocc[2]           = pfmetHandle->front().momentum().z();
+  mTempTreepfMETphi_Fullcorr_nocc           = pfmetHandle->front().phi();
+  mTempTreepfMET_Fullcorr_nocc_significance = pfmetHandle->front().mEtSig();
+
+  // Do the MET save for no corr no cc pfMET
+  mTempTreepfMET_Nocorr_nocc[0] = pfmetHandle->front().corEx();//uncorr to bare bones
+  mTempTreepfMET_Nocorr_nocc[1] = pfmetHandle->front().corEy(pat::MET::UncorrectionType(0));//uncorr to bare bones
+  mTempTreepfMETphi_Nocorr_nocc = pfmetHandle->front().uncorrectedPhi(pat::MET::UncorrectionType(0));//uncorr to bare bones
+
+  // Do the MET save for muon corr no cc pfMET
+  mTempTreepfMET_Muoncorr_nocc[0] = pfmetHandle->front().corEx(pat::MET::UncorrectionType(1));//uncorr for JEC
+  mTempTreepfMET_Muoncorr_nocc[1] = pfmetHandle->front().corEy(pat::MET::UncorrectionType(1));//uncorr for JEC 
+  mTempTreepfMETphi_Muoncorr_nocc = pfmetHandle->front().uncorrectedPhi(pat::MET::UncorrectionType(1));//uncorr for JEC
+
+  // Do the MET save for JEC corr no cc pfMET
+  mTempTreepfMET_JECcorr_nocc[0] = pfmetHandle->front().corEx(pat::MET::UncorrectionType(2));//uncorr for muons
+  mTempTreepfMET_JECcorr_nocc[1] = pfmetHandle->front().corEy(pat::MET::UncorrectionType(2));//uncorr for muons
+  mTempTreepfMETphi_JECcorr_nocc = pfmetHandle->front().uncorrectedPhi(pat::MET::UncorrectionType(2));//uncorr for muons
 
 
   //
@@ -1353,30 +953,12 @@ JaredSusyAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   mTempTreeMET_JECcorr_nocc[1] = metHandle->front().corEy(pat::MET::UncorrectionType(2));//uncorr for muons
   mTempTreeMETphi_JECcorr_nocc = metHandle->front().uncorrectedPhi(pat::MET::UncorrectionType(2));//uncorr for muons
 
-  // get cc MET
-  edm::Handle< std::vector<pat::MET> > ccmetHandle;
-  iEvent.getByLabel(ccmetTag_, ccmetHandle);
-  if ( !ccmetHandle.isValid() ) {
-    edm::LogWarning("METEventSelector") << "No Met results for InputTag " << metTag_;
-    return;
-  }
   //
   // sanity check on collection
   //
-  if ( ccmetHandle->size()!=1 ) {
-    edm::LogWarning("METEventSelector") << "ccMET collection size is "
-					<< ccmetHandle->size() << " instead of 1";
-    return;
-  }
   nUncorrMET = 2;
   nFullMET   = 3;
 
-  // Do the MET save for full corr cc MET
-  mTempTreeMET_Fullcorr_cc[0] = ccmetHandle->front().momentum().X();
-  mTempTreeMET_Fullcorr_cc[1] = ccmetHandle->front().momentum().Y();
-  mTempTreeMET_Fullcorr_cc[2] = ccmetHandle->front().momentum().z();
-  mTempTreeMETphi_Fullcorr_cc = ccmetHandle->front().phi();
-  
   // Fill the tree only if all preselection conditions are met
   //if(preselection) //mPreselection->Fill();
   mAllData->Fill();
@@ -1595,13 +1177,6 @@ JaredSusyAnalyzer::initPlots() {
   mAllData->Branch("JetBTag_SimpleSecVtx",  mTempTreeJetsBTag_SimpleSecVtx,  "JetBTag_SimpleSecVtx[Njets]/float");
   mAllData->Branch("JetBTag_CombSecVtx",    mTempTreeJetsBTag_CombSecVtx,    "JetBTag_CombSecVtx[Njets]/float");
 
-  //information about associated cc jets
-  mAllData->Branch("Jet_isccJetAssoc",mTempTreeccJetAssoc,"mTempTreeccJetAssoc[Njets]/bool");
-  mAllData->Branch("Jet_ccJetE",mTempTreeccJetAssoc_E,",mTempTreeccJetAssoc_E[Njets]/double");
-  mAllData->Branch("Jet_ccJetpx",mTempTreeccJetAssoc_px,",mTempTreeccJetAssoc_px[Njets]/double");
-  mAllData->Branch("Jet_ccJetpy",mTempTreeccJetAssoc_py,",mTempTreeccJetAssoc_py[Njets]/double");
-  mAllData->Branch("Jet_ccJetpz",mTempTreeccJetAssoc_pz,",mTempTreeccJetAssoc_pz[Njets]/double");
-
   //information about associated gen jets
   mAllData->Branch("GenHt"   ,&mTempTreeGenHt ,"GenHt/double");
   mAllData->Branch("GenMHt"  ,&mTempTreeGenMHt ,"GenMHt/double");
@@ -1630,31 +1205,6 @@ JaredSusyAnalyzer::initPlots() {
   mAllData->Branch("JetTrackPhiWeighted",mTempTreeJetTrackPhiWeighted,"JetTrackPhiWeighted[Njets]/double"); 
   mAllData->Branch("JetTrackNo",mTempTreeJetTrackNo,"JetTrackNo[Njets]/int");
 
-  //add photons
-  mAllData->Branch("Nphot" ,     &mTempTreeNphot,     "Nphot/int");  
-  mAllData->Branch("PhotE" ,     mTempTreePhotE,      "PhotE[Nphot]/double");
-  mAllData->Branch("PhotEt",     mTempTreePhotEt,     "PhotEt[Nphot]/double");
-  mAllData->Branch("Photpt",     mTempTreePhotPt,     "Photpt[Nphot]/double");
-  mAllData->Branch("Photpx",     mTempTreePhotPx,     "Photpx[Nphot]/double");
-  mAllData->Branch("Photpy",     mTempTreePhotPy,     "Photpy[Nphot]/double");
-  mAllData->Branch("Photpz",     mTempTreePhotPz,     "Photpz[Nphot]/double");
-  mAllData->Branch("Photeta",    mTempTreePhotEta,    "Photeta[Nphot]/double");
-  mAllData->Branch("Photphi",    mTempTreePhotPhi,    "Photphi[Nphot]/double");
-  mAllData->Branch("PhotTrkIso", mTempTreePhotTrkIso, "mTempTreePhotTrkIso[Nphot]/double");
-  mAllData->Branch("PhotECalIso",mTempTreePhotECalIso,"mTempTreePhotECalIso[Nphot]/double");
-  mAllData->Branch("PhotHCalIso",mTempTreePhotHCalIso,"mTempTreePhotHCalIso[Nphot]/double");
-  mAllData->Branch("PhotAllIso", mTempTreePhotAllIso, "mTempTreePhotAllIso[Nphot]/double");
-
-  mAllData->Branch("Phot_isccPhotAssoc",mTempTreeccPhotAssoc,    "mTempTreeccPhotAssoc[Nphot]/bool");
-  mAllData->Branch("PhotLooseEM",       mTempTreePhotLooseEM,    "mTempTreePhotLooseEM[Nphot]/bool");
-  mAllData->Branch("PhotLoosePhoton",   mTempTreePhotLoosePhoton,"mTempTreePhotLoosePhoton[Nphot]/bool");
-  mAllData->Branch("PhotTightPhoton",   mTempTreePhotTightPhoton,"mTempTreePhotTightPhoton[Nphot]/bool");
-  mAllData->Branch("PhotGenPdgId",      mTempTreeGenPhotPdgId,   "PhotGenPdgId[Nphot]/double");
-  mAllData->Branch("PhotGenMother",     mTempTreeGenPhotMother,  "PhotGenMother[Nphot]/double");
-  mAllData->Branch("PhotGenPx",         mTempTreeGenPhotPx,      "PhotGenPx[Nphot]/double");
-  mAllData->Branch("PhotGenPy",         mTempTreeGenPhotPy,      "PhotGenPy[Nphot]/double");
-  mAllData->Branch("PhotGenPz",         mTempTreeGenPhotPz,      "PhotGenPz[Nphot]/double");
- 
   //add electrons
   mAllData->Branch("Nelec" , &mTempTreeNelec, "Nelec/int");  
   mAllData->Branch("ElecE" , mTempTreeElecE , "ElecE[Nelec]/double");
@@ -1711,7 +1261,6 @@ JaredSusyAnalyzer::initPlots() {
   mAllData->Branch("ElecGenPx",    mTempTreeGenElecPx,    "ElecGenPx[Nelec]/double");
   mAllData->Branch("ElecGenPy",    mTempTreeGenElecPy,    "ElecGenPy[Nelec]/double");
   mAllData->Branch("ElecGenPz",    mTempTreeGenElecPz,    "ElecGenPz[Nelec]/double");
-  mAllData->Branch("Elec_isccElecAssoc",mTempTreeccElecAssoc,"mTempTreeccElecAssoc[Nelec]/bool");
 
   //add muons
   mAllData->Branch("Nmuon",         &mTempTreeNmuon,        "Nmuon/int");  
@@ -1780,7 +1329,6 @@ JaredSusyAnalyzer::initPlots() {
   mAllData->Branch("MuonGenPx",    mTempTreeGenMuonPx,    "MuonGenPx[Nmuon]/double");
   mAllData->Branch("MuonGenPy",    mTempTreeGenMuonPy,    "MuonGenPy[Nmuon]/double");
   mAllData->Branch("MuonGenPz",    mTempTreeGenMuonPz,    "MuonGenPz[Nmuon]/double");
-  mAllData->Branch("Muon_isccMuonAssoc",mTempTreeccMuonAssoc,"mTempTreeccMuonAssoc[Nmuon]/bool");
 
   // PFjets
   mAllData->Branch("NPFjet" ,&mTempTreeNPFjet,"NPFjet/int");
@@ -1812,54 +1360,6 @@ JaredSusyAnalyzer::initPlots() {
   mAllData->Branch("genLepPy",genLepPy,"genLepPy[genLepN]/float");
   mAllData->Branch("genLepPz",genLepPz,"genLepPz[genLepN]/float");
   mAllData->Branch("genLepStatus",genLepStatus,"genLepStatus[genLepN]/int");
-  
-  //benedetta
-  mAllData->Branch("genTauN",&genTauLength ,"genTauN/int");
-  mAllData->Branch("genTauId",genTauIds ,"genTauId[genTauN]/int");
-  mAllData->Branch("genTauStatus",genTauStatus ,"genTauStatus[genTauN]/int");
-  mAllData->Branch("genTauE",genTauE ,"genTauE[genTauN]/float");
-  mAllData->Branch("genTauPx",genTauPx ,"genTauPx[genTauN]/float");
-  mAllData->Branch("genTauPy",genTauPy ,"genTauPy[genTauN]/float");
-  mAllData->Branch("genTauPz",genTauPz ,"genTauPz[genTauN]/float");
-  mAllData->Branch("genTauMother",genTauRefs ,"genTauMother[genTauN]/int");
-  mAllData->Branch("genTauDauLeptonId",genTauDauLeptonId ,"genTauDauLeptonId[genTauN]/int");
-  mAllData->Branch("genTauDauLeptonic",genTauDauLeptonic ,"genTauDauLeptonic[genTauN]/int");
-  mAllData->Branch("genTauDauCharged",genTauDauCharged ,"genTauDauCharged[genTauN]/int");
-  mAllData->Branch("genTauDauNeutral",genTauDauNeutral ,"genTauDauNeutral[genTauN]/int");
-  mAllData->Branch("genTauDauNeutrinos",genTauDauNeutrinos ,"genTauDauNeutrinos[genTauN]/int");
-  mAllData->Branch("genTauDauEnergyLeptonic",genTauDauEnergyLeptonic ,"genTauDauEnergyLeptonic[genTauN]/float");
-  mAllData->Branch("genTauDauEnergyCharged",genTauDauEnergyCharged ,"genTauDauEnergyCharged[genTauN]/float");
-  mAllData->Branch("genTauDauEnergyNeutral",genTauDauEnergyNeutral ,"genTauDauEnergyNeutral[genTauN]/float");
-  mAllData->Branch("genTauDauEnergyNeutrinos",genTauDauEnergyNeutrinos ,"genTauDauEnergyNeutrinos[genTauN]/float");
-  
-  mAllData->Branch("genTauDauPxLeptonic",genTauDauPxLeptonic ,"genTauDauPxLeptonic[genTauN]/float");
-  mAllData->Branch("genTauDauPxCharged",genTauDauPxCharged ,"genTauDauPxCharged[genTauN]/float");
-  mAllData->Branch("genTauDauPxNeutral",genTauDauPxNeutral ,"genTauDauPxNeutral[genTauN]/float");
-  mAllData->Branch("genTauDauPxNeutrinos",genTauDauPxNeutrinos ,"genTauDauPxNeutrinos[genTauN]/float");
-  mAllData->Branch("genTauDauPyLeptonic",genTauDauPyLeptonic ,"genTauDauPyLeptonic[genTauN]/float");
-  mAllData->Branch("genTauDauPyCharged",genTauDauPyCharged ,"genTauDauPyCharged[genTauN]/float");
-  mAllData->Branch("genTauDauPyNeutral",genTauDauPyNeutral ,"genTauDauPyNeutral[genTauN]/float");
-  mAllData->Branch("genTauDauPyNeutrinos",genTauDauPyNeutrinos ,"genTauDauPyNeutrinos[genTauN]/float");
-  
-  mAllData->Branch("genTauDauPzLeptonic",genTauDauPzLeptonic ,"genTauDauPzLeptonic[genTauN]/float");
-  mAllData->Branch("genTauDauPzCharged",genTauDauPzCharged ,"genTauDauPzCharged[genTauN]/float");
-  mAllData->Branch("genTauDauPzNeutral",genTauDauPzNeutral ,"genTauDauPzNeutral[genTauN]/float");
-  mAllData->Branch("genTauDauPzNeutrinos",genTauDauPzNeutrinos ,"genTauDauPzNeutrinos[genTauN]/float");
-  
-  mAllData->Branch("genTauDauCh1Id",genTauDauCh1Id ,"genTauDauCh1Id[genTauN]/int");
-  mAllData->Branch("genTauDauCh1Px",genTauDauCh1Px ,"genTauDauCh1Px[genTauN]/float");
-  mAllData->Branch("genTauDauCh1Py",genTauDauCh1Py ,"genTauDauCh1Py[genTauN]/float");
-  mAllData->Branch("genTauDauCh1Pz",genTauDauCh1Pz ,"genTauDauCh1Pz[genTauN]/float");
-  mAllData->Branch("genTauDauCh2Id",genTauDauCh2Id ,"genTauDauCh2Id[genTauN]/int");
-  mAllData->Branch("genTauDauCh2Px",genTauDauCh2Px ,"genTauDauCh2Px[genTauN]/float");
-  mAllData->Branch("genTauDauCh2Py",genTauDauCh2Py ,"genTauDauCh2Py[genTauN]/float");
-  mAllData->Branch("genTauDauCh2Pz",genTauDauCh2Pz ,"genTauDauCh2Pz[genTauN]/float");
-  mAllData->Branch("genTauDauCh3Id",genTauDauCh3Id ,"genTauDauCh3Id[genTauN]/int");
-  mAllData->Branch("genTauDauCh3Px",genTauDauCh3Px ,"genTauDauCh3Px[genTauN]/float");
-  mAllData->Branch("genTauDauCh3Py",genTauDauCh3Py ,"genTauDauCh3Py[genTauN]/float");
-  mAllData->Branch("genTauDauCh3Pz",genTauDauCh3Pz ,"genTauDauCh3Pz[genTauN]/float");
-
-  //end benedetta  
 
   mAllData->Branch("AlpPtScale" ,&mTempAlpPtScale,"mTempAlpPtScale/double");
   mAllData->Branch("AlpIdTest" ,&mTempAlpIdTest ,"AlpIdTest/int");

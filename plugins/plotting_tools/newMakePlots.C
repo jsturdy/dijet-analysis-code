@@ -3,7 +3,7 @@ void newMakePlots()
   static const double NUMHISTS  = 15;
   static const double NUMHISTS2 = 4;
   static const double NUMVARS   = 4;
-  static const double NUMFILES  = 4;
+  static const double NUMFILES  = 3;
   static const double localpi  = acos(-1);
   //bigcanvas1 = new TCanvas("bigcanvas1", "", 1440,900);
   //bigcanvas2 = new TCanvas("bigcanvas2", "", 1440,900);
@@ -32,10 +32,10 @@ void newMakePlots()
   TH1F *hist[NUMFILES][NUMHISTS][NUMVARS];
   TH1F *hist2[NUMFILES][NUMHISTS2][2];
 
-  filenames[0] = "SUSY_LM0";
-  filenames[1] = "SUSY_LM1";
-  filenames[2] = "SUSY_LM5";
-  filenames[3] = "SM_Background";
+  filenames[0] = "AK5_MET_350_SUSY_LM0";
+  filenames[1] = "AK5_MET_350_SUSY_LM1";
+//  filenames[2] = "SUSY_LM5";
+  filenames[2] = "AK5_MET_SM_Background";
 //  filenames[3] = "QCD_Background";
 //  filenames[4] = "TTJets";
 //  filenames[5] = "WJets";
@@ -88,11 +88,11 @@ void newMakePlots()
   linecolor[0] = kBlue;//LM0
   linecolor[1] = kRed+1;//LM1
   linecolor[2] = kGreen+1;//LM5
-  linecolor[3] = kPink+7;//QCD
-  linecolor[4] = kBlue+3;//TTJets
-  linecolor[5] = kYellow+3;//WJets
-  linecolor[6] = kCyan+3;//ZJets
-  linecolor[7] = kOrange+7;//ZInvisibleJets
+//  linecolor[3] = kPink+7;//QCD
+//  linecolor[4] = kBlue+3;//TTJets
+//  linecolor[5] = kYellow+3;//WJets
+//  linecolor[6] = kCyan+3;//ZJets
+//  linecolor[7] = kOrange+7;//ZInvisibleJets
   
   for (int tt = 0; tt < NUMVARS; tt++) {
     for (int z = 0; z < NUMHISTS; z++) {
@@ -103,7 +103,7 @@ void newMakePlots()
       mycanvas2[y][ss] = new TCanvas(histnames2[y][ss], "", 600,600);}}
   
   for (int j = 0; j < NUMFILES; j++) {
-    file[j] = new TFile(filenames[j]+"_cuts.root");
+    file[j] = new TFile(filenames[j]+".root");
     
     for (int tt = 0; tt < NUMVARS; tt++) {
       for (int z = 0; z < NUMHISTS; z++) {
