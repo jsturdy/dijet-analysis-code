@@ -405,10 +405,10 @@ void allData::Loop() {
     }
 
     genMET    = sqrt(genMETx*genMETx + genMETy*genMETy);
-    genMETphi = atan2(genMETx,genMETy);
+    genMETphi = atan2(genMETy,genMETx);
 
     double MET    = sqrt( METx*METx + METy*METy );
-    double METphi = atan2(METx,METy);
+    double METphi = atan2(METy,METx);
     
     //printf("type   phi    MEx    MEy\n");
     //printf("full:  %2.2f  %2.2f   %2.2f\n",METphi_fullcorr_nocc,MET_fullcorr_nocc[0],MET_fullcorr_nocc[1]);
