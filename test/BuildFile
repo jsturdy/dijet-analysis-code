@@ -5,6 +5,6 @@
 <use name=clhep>
 <use name=DataFormats/PatCandidates>
 <use name=DataFormats/Common>
-<library name=JaredSusyAnalyzer file=JaredSusyAnalyzer.cpp>
-  <flags EDM_PLUGIN=1>
-</library>
+#<library name=JaredSusyAnalyzer file=JaredSusyAnalyzer.cpp>
+#  <flags EDM_PLUGIN=1>
+#</library>

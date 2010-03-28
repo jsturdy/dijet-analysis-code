@@ -20,7 +20,7 @@
 #include "FWCore/ParameterSet/interface/InputTag.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 // SUSY include files
 //#include "SusyAnalysis/EventSelector/interface/SusyEventSelector.h"
