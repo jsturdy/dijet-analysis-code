@@ -11,15 +11,12 @@
 //
 // Original Author:  Jared Sturdy
 //         Created:  Tue Feb 2 12:11:44 PDT 2010
-// $Id: METAnalyzer.cc,v 1.1 2010/02/02 12:11:44 sturdy Exp $
+// $Id: METAnalyzer.cc,v 1.1 2010/03/11 07:01:10 sturdy Exp $
 //
 //
 #include "JSturdy/DiJetAnalysis/interface/METAnalyzer.h"
 
 #include <TMath.h>
-using namespace std;
-using namespace reco;
-using namespace edm;
 
 //________________________________________________________________________________________
 METAnalyzer::METAnalyzer(const edm::ParameterSet& iConfig)
@@ -58,7 +55,8 @@ METAnalyzer::~METAnalyzer() {}
 bool
 METAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  //  using namespace edm;
+  using namespace reco;
+  using namespace edm;
 
   met_result = false;
   edm::LogVerbatim("DiJetEvent::METAnalyzer") << " Start  " << std::endl;

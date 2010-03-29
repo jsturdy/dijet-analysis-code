@@ -12,7 +12,7 @@ Description: Variable collector/ntupler for SUSY search with Jets + MET
 //
 // Original Author:  Jared Sturdy
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: VertexAnalyzer.cpp,v 1.1 2010/01/29 16:10:31 sturdy Exp $
+// $Id: LeptonAnalyzer.cc,v 1.1 2010/03/11 07:01:54 sturdy Exp $
 //
 //
 
@@ -24,9 +24,6 @@ Description: Variable collector/ntupler for SUSY search with Jets + MET
 //#include <math.h>
 #include <TMath.h>
 #include <sstream>
-using namespace std;
-using namespace reco;
-using namespace edm;
 
 //________________________________________________________________________________________
 LeptonAnalyzer::LeptonAnalyzer(const edm::ParameterSet& pset)
@@ -82,6 +79,7 @@ LeptonAnalyzer::~LeptonAnalyzer() {}
 bool
 LeptonAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  using namespace reco;
   using namespace edm;
 
   //bool preselection = false;

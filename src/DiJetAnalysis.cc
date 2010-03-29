@@ -14,17 +14,13 @@ Implementation:Uses the EventSelector interface for event selection and TFileSer
 //
 // Original Author:  Markus Stoye, (modified by Jared Sturdy from SusyDiJetAnalysis)
 //         Created:  Mon Feb 18 15:40:44 CET 2008
-// $Id: DiJetAnalysis.cpp,v 1.3 2010/01/28 23:21:08 sturdy Exp $
+// $Id: DiJetAnalysis.cc,v 1.1 2010/03/11 07:03:25 sturdy Exp $
 //
 //
 #include "JSturdy/DiJetAnalysis/interface/DiJetAnalysis.h"
 
 #include <TMath.h>
 #include <sstream>
-
-using namespace std;
-//using namespace reco;
-using namespace edm;
 
 //________________________________________________________________________________________
 DiJetAnalysis::DiJetAnalysis(const edm::ParameterSet& iConfig)
@@ -59,6 +55,7 @@ DiJetAnalysis::~DiJetAnalysis() {}
 void
 DiJetAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  using namespace reco;
   using namespace edm;
 
   //bool preselection = false;

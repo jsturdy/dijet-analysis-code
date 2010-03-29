@@ -14,7 +14,7 @@ Description: Collects variables related to jets, performs dijet preselection
 //
 // Original Author:  Jared Sturdy
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: JetAnalyzer.cpp,v 1.1 2010/01/29 16:10:31 sturdy Exp $
+// $Id: JetAnalyzer.cc,v 1.1 2010/03/11 07:01:07 sturdy Exp $
 //
 //
 
@@ -22,9 +22,6 @@ Description: Collects variables related to jets, performs dijet preselection
 
 #include <TMath.h>
 #include <sstream>
-using namespace std;
-using namespace reco;
-using namespace edm;
 
 //________________________________________________________________________________________
 JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig)
@@ -76,6 +73,7 @@ JetAnalyzer::~JetAnalyzer() {}
 bool
 JetAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  using namespace reco;
   using namespace edm;
 
   bool jetPreselection = false;

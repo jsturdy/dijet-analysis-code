@@ -12,21 +12,17 @@ Implementation:Uses the EventSelector interface for event selection and TFileSer
 
 */
 //
-// Original Author:  Markus Stoye, (modified by Jared Sturdy from SusyDiJetAnalysis)
+// Original Author:  Jared Sturdy (from SusyDiJetAnalysis)
 //         Created:  Mon Feb 18 15:40:44 CET 2008
-// $Id: TriggerAnalyzer.cpp,v 1.3 2010/01/28 23:21:08 sturdy Exp $
+// $Id: TriggerAnalyzer.cc,v 1.1 2010/03/11 07:01:15 sturdy Exp $
 //
 //
 //#include "SusyAnalysis/EventSelector/interface/BJetEventSelector.h"
 #include "JSturdy/DiJetAnalysis/interface/TriggerAnalyzer.h"
-//#include "DataFormats/MuonReco/interface/MuonSelectors.h"
 //#define _USE_MATH_DEFINES
 //#include <math.h>
 #include <TMath.h>
 #include <sstream>
-using namespace std;
-using namespace reco;
-using namespace edm;
 
 //________________________________________________________________________________________
 TriggerAnalyzer::TriggerAnalyzer(const edm::ParameterSet& iConfig)
@@ -55,6 +51,7 @@ TriggerAnalyzer::~TriggerAnalyzer() {}
 bool
 TriggerAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  using namespace reco;
   using namespace edm;
 
   //bool preselection = false;

@@ -6,30 +6,24 @@
 // 
 /**\class TrackAnalyzer TrackAnalyzer.cc JSturdy/DiJetAnalysis/src/TrackAnalyzer.cc
 
-Description: Variable collector/ntupler for SUSY search with Jets + MET
+Description: Collects variables related to tracks
 
-Implementation:Uses the EventSelector interface for event selection and TFileService for plotting.
 
 */
 //
-// Original Author:  Markus Stoye, (modified by Jared Sturdy from SusyDiJetAnalysis)
-//         Created:  Mon Feb 18 15:40:44 CET 2008
-// $Id: TrackAnalyzer.cpp,v 1.3 2010/01/28 23:21:08 sturdy Exp $
+// Original Author:  Jared Sturdy (from SusyDiJetAnalysis)
+//         Created:  Fri Jan 29 16:10:31 PDT 2010
+// $Id: TrackAnalyzer.cc,v 1.1 2010/03/11 07:01:36 sturdy Exp $
 //
 //
 #include "JSturdy/DiJetAnalysis/interface/TrackAnalyzer.h"
 #include <TMath.h>
-using namespace std;
-using namespace reco;
-using namespace edm;
-
 
 //________________________________________________________________________________________
 TrackAnalyzer::TrackAnalyzer(const edm::ParameterSet& iConfig)
 { 
 
   doMCData_ = true;
-  // Say something about event weights
   if (iConfig.exists("doMCData"))
     doMCData_  = iConfig.getParameter<bool>("doMCData");
   if (doMCData_)
@@ -56,7 +50,8 @@ TrackAnalyzer::~TrackAnalyzer() {}
 bool
 TrackAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  //  using namespace edm;
+  using namespace reco;
+  using namespace edm;
 
   track_result = false;
   //bool preselection = false;

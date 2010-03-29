@@ -13,17 +13,13 @@ Description: Collects variables related to vertices, performs a primary vertex c
 //
 // Original Author:  Jared Sturdy
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: VertexAnalyzer.cc,v 1.1 2010/03/11 07:02:03 sturdy Exp $
+// $Id: VertexAnalyzer.cc,v 1.2 2010/03/29 10:51:55 sturdy Exp $
 //
 //
 
 #include "JSturdy/DiJetAnalysis/interface/VertexAnalyzer.h"
 #include <TMath.h>
 #include <sstream>
-
-using namespace std;
-using namespace reco;
-using namespace edm;
 
 //________________________________________________________________________________________
 VertexAnalyzer::VertexAnalyzer(const edm::ParameterSet& pset)
@@ -62,6 +58,7 @@ VertexAnalyzer::~VertexAnalyzer() {}
 bool
 VertexAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  using namespace reco;
   using namespace edm;
 
   edm::LogVerbatim("VertexAnalyzer") << " Start  " << std::endl;
