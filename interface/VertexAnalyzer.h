@@ -72,9 +72,11 @@ class VertexAnalyzer {
   bool   vertexDecision;
   
   int    m_nVtx;
+  int    m_VtxNTrks[10];
   double m_VtxChi2[5];
   double m_VtxNdof[5];
   double m_VtxIsValid[5];
+  double m_VtxSumTrkPt[10];
   double m_VtxNormalizedChi2[5];
   double m_VtxX[5];
   double m_VtxY[5];

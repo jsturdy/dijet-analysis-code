@@ -13,7 +13,7 @@ Description: Collects variables related to vertices, performs a primary vertex c
 //
 // Original Author:  Jared Sturdy
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: VertexAnalyzer.cpp,v 1.1 2010/01/29 16:10:31 sturdy Exp $
+// $Id: VertexAnalyzer.cc,v 1.1 2010/03/11 07:02:03 sturdy Exp $
 //
 //
 
@@ -33,8 +33,8 @@ VertexAnalyzer::VertexAnalyzer(const edm::ParameterSet& pset)
   _minNVtx    = 1;    //minimum number of vertices
   _minVtxTrks = 3;    //minimum number of tracks that contribute to the vertex
   _minVtxNdof = 4;    //minimum number of degrees of freedom for the vertex
-  _maxVtxChi2  = 2.4;  //max chi2 of vertex is 2.4
-  _maxVtxZ     = 15.0; //max z of vertex is 15 cm
+  _maxVtxChi2 = 2.4;  //max chi2 of vertex is 2.4
+  _maxVtxZ    = 15.0; //max z of vertex is 15 cm
 
   if (vertexParams.exists("minNVtx"))
     _minNVtx = vertexParams.getParameter<int>("minNVtx");
@@ -67,6 +67,7 @@ VertexAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::LogVerbatim("VertexAnalyzer") << " Start  " << std::endl;
 
   std::ostringstream dbg;
+  vertexDecision = false;
 
   // get the Vertex collection
 
@@ -75,38 +76,18 @@ VertexAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByLabel(vtxTag_, vertices);
   if ( !vertices.isValid() ) {
     LogDebug("VertexAnalyzer") << "No Vertex results for InputTag" << vtxTag_;
-    return false;
+    return vertexDecision;
   } 
 
-  m_nVtx = (*vertices).size();
-
-  const reco::Vertex* pVertex = &(*vertices)[0];
-  m_VtxNormalizedChi2[0] = pVertex->normalizedChi2();
-  m_VtxIsValid[0]        = pVertex->isValid();
-  m_VtxChi2[0]           = pVertex->chi2();
-  m_VtxNdof[0]           = pVertex->ndof();
-  m_VtxX[0]              = pVertex->x();
-  m_VtxY[0]              = pVertex->y();
-  m_VtxZ[0]              = pVertex->z();
-  m_VtxdX[0]             = pVertex->xError();
-  m_VtxdY[0]             = pVertex->yError();
-  m_VtxdZ[0]             = pVertex->zError();
-  
-  bool vertexDecision = false;
-  if(m_nVtx>=_minNVtx)
-    if(pVertex->isValid())
-      //if(pVertex->Tracks()>=_minVtxTrks)
-      if(pVertex->ndof()>=_minVtxNdof)
-	//if(pVertex->chi2()<=_maxVtxChi2)
-	if(pVertex->z()<=_maxVtxZ)
-	  vertexDecision = true;
-  
-  
-  if ((*vertices).size()>1) {
-    for (int i=1; i< (int) (*vertices).size(); i++){  
-      const reco::Vertex* pVertex = &(*vertices)[i];
+  int tmpnVtx = (*vertices).size();
+  int nVtx = 0;
+  if (tmpnVtx > 10) tmpnVtx = 10;
+  for (int i=0; i< tmpnVtx; i++){  
+    const reco::Vertex* pVertex = &(*vertices)[i];
+    if(pVertex->isValid()) {
       m_VtxNormalizedChi2[i] = pVertex->normalizedChi2();
       m_VtxIsValid[i]        = pVertex->isValid();
+      m_VtxNTrks[i]          = pVertex->tracksSize();
       m_VtxChi2[i]           = pVertex->chi2();
       m_VtxNdof[i]           = pVertex->ndof();
       m_VtxX[i]              = pVertex->x();
@@ -115,8 +96,22 @@ VertexAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       m_VtxdX[i]             = pVertex->xError();
       m_VtxdY[i]             = pVertex->yError();
       m_VtxdZ[i]             = pVertex->zError();
-    } 
-  }
+
+      for (Vertex::trackRef_iterator vertex_curTrack = pVertex->tracks_begin(); vertex_curTrack!=pVertex->tracks_end(); vertex_curTrack++) {
+	m_VtxSumTrkPt[i] += (*vertex_curTrack)->pt();
+      }
+      
+      ++nVtx;
+    }
+  } 
+  
+  if(tmpnVtx>=_minNVtx)
+    //if(m_VtxNTrks[0]>=_minVtxTrks)
+    //if(m_VtxSumTrkPt[0]>=_minVtxSumTrkPt)
+    if(m_VtxNdof[0]>=_minVtxNdof)
+      //if(m_VtxChi2[0]<=_maxVtxChi2)
+      if(m_VtxZ[0]<=_maxVtxZ)
+	vertexDecision = true;
   
   //mVertexData->Fill();
   return vertexDecision;
