@@ -14,7 +14,7 @@ Description: Collects variables related to jets, performs dijet preselection
 //
 // Original Author:  Jared Sturdy
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: JetAnalyzer.cc,v 1.1 2010/03/11 07:01:07 sturdy Exp $
+// $Id: JetAnalyzer.cc,v 1.2 2010/03/29 11:19:36 sturdy Exp $
 //
 //
 
@@ -24,36 +24,63 @@ Description: Collects variables related to jets, performs dijet preselection
 #include <sstream>
 
 //________________________________________________________________________________________
-JetAnalyzer::JetAnalyzer(const edm::ParameterSet& iConfig)
+JetAnalyzer::JetAnalyzer(const edm::ParameterSet& pset, TTree* tmpAllData)
 { 
-
+  mJetData = tmpAllData;
+  jetParams = pset;
   //defaults
-  usePfJets_   = true;
-  useJPTJets_  = true;
-  useCaloJets_ = true;
-  doMCData_    = true;
-
-  jetMaxEta_ = 3.0;
-  jetMinPt_ = 30;
-  doMCData_ = true;
+  usePFJets_    = true;
+  useJPTJets_   = true;
+  useCaloJets_  = true;
+  useTrackJets_ = true;
+  doMCData_     = true;
+  debug_        = 0;
   // Preselection parameters
-  if (iConfig.exists("jetMaxEta")) jetMaxEta_ = iConfig.getParameter<double>("jetMaxEta");
-  if (iConfig.exists("jetMinPt"))  jetMinPt_  = iConfig.getParameter<double>("jetMinPt");
-  if (iConfig.exists("doMCData"))  doMCData_  = iConfig.getParameter<bool>("doMCData");
-  if (doMCData_) 
-    if (iConfig.exists("genTag"))    genTag_    = iConfig.getParameter<edm::InputTag>("genTag");
- 
+  //Basic jet information, minimum number, eta and pt requirement for all jets
+  minNJets_  = 1;
+  jetMaxEta_ = 3.0;
+  jetMinPt_  = 30;
+  jetMaxEMF_ = 0.95;
+  jetMinEMF_ = 0.0;
+  if (jetParams.exists("debugJets"))     debug_   = jetParams.getUntrackedParameter<int>("debugJets");
+  //if (jetParams.exists("minNJets"))  minNJets_  = jetParams.getUntrackedParameter<int>("minNJets");
+  if (jetParams.exists("jetMaxEta")) jetMaxEta_ = jetParams.getUntrackedParameter<double >("jetMaxEta");
+  if (jetParams.exists("jetMinPt"))  jetMinPt_  = jetParams.getUntrackedParameter<double >("jetMinPt");
+  if (jetParams.exists("jetMaxEMF")) jetMaxEMF_ = jetParams.getUntrackedParameter<double >("jetMaxEMF");
+  if (jetParams.exists("jetMinEMF")) jetMinEMF_ = jetParams.getUntrackedParameter<double >("jetMinEMF");
+  //for (int nj = 0; nj < selJetMaxEta_.size(); ++nj) {
+  //  printf("jet %2d, eta max %2.2f, min pt %2.2f, max emf %2.2f, min emf %2.2f\n",nj,selJetMaxEta_.at(nj), selJetMinPt_.at(nj),selJetMaxEMF_.at(nj), selJetMinEMF_.at(nj));
+  //}
 
+  //Individual jet requirements
+  if (jetParams.exists("selJetMaxEta")) selJetMaxEta_ = jetParams.getUntrackedParameter<std::vector<double > >("selJetMaxEta");
+  if (jetParams.exists("selJetMinPt"))  selJetMinPt_  = jetParams.getUntrackedParameter<std::vector<double > >("selJetMinPt");
+  if (jetParams.exists("selJetMaxEMF")) selJetMaxEMF_ = jetParams.getUntrackedParameter<std::vector<double > >("selJetMaxEMF");
+  if (jetParams.exists("selJetMinEMF")) selJetMinEMF_ = jetParams.getUntrackedParameter<std::vector<double > >("selJetMinEMF");
+  if (debug_) {
+    std::cout<<"size of dijet vector "<<selJetMaxEta_.size()<<std::endl;
+    for (int nj = 0; nj < selJetMaxEta_.size(); ++nj) {
+      printf("jet %2d, eta max %2.2f, min pt %2.2f, max emf %2.2f, min emf %2.2f\n",nj,selJetMaxEta_.at(nj), selJetMinPt_.at(nj),selJetMaxEMF_.at(nj), selJetMinEMF_.at(nj));
+    }
+  }
+  
+  doMCData_ = true;
+  if (jetParams.exists("doMCJets"))     doMCData_     = jetParams.getUntrackedParameter<bool>("doMCJets");
+  if (doMCData_) 
+    if (jetParams.exists("genJetTag"))    genJetTag_    = jetParams.getUntrackedParameter<edm::InputTag>("genJetTag");
+ 
   // get the data tags
-  usePfJets_   = iConfig.getParameter<bool>("UsePfjet");
-  useJPTJets_  = iConfig.getParameter<bool>("UseJPTjet");
-  useCaloJets_ = iConfig.getParameter<bool>("UseCalojet");
-  if (usePfJets_)   pfjetTag_  = iConfig.getParameter<edm::InputTag>("pfjetTag");
-  if (useJPTJets_)  jptTag_    = iConfig.getParameter<edm::InputTag>("jptTag");
-  if (useCaloJets_) jetTag_    = iConfig.getParameter<edm::InputTag>("jetTag");
+  usePFJets_    = jetParams.getUntrackedParameter<bool>("usePFJets");
+  useJPTJets_   = jetParams.getUntrackedParameter<bool>("useJPTJets");
+  useCaloJets_  = jetParams.getUntrackedParameter<bool>("useCaloJets");
+  useTrackJets_ = jetParams.getUntrackedParameter<bool>("useTrackJets");
+  if (usePFJets_)    pfJetTag_    = jetParams.getUntrackedParameter<edm::InputTag>("pfJetTag");
+  if (useJPTJets_)   jptJetTag_   = jetParams.getUntrackedParameter<edm::InputTag>("jptJetTag");
+  if (useCaloJets_)  caloJetTag_  = jetParams.getUntrackedParameter<edm::InputTag>("caloJetTag");
+  if (useTrackJets_) trackJetTag_ = jetParams.getUntrackedParameter<edm::InputTag>("trackJetTag");
   //If possible to retrieve these values rather than calculate them myself
-  htTag_     = iConfig.getParameter<edm::InputTag>("htTag");
-  mhtTag_    = iConfig.getParameter<edm::InputTag>("mhtTag");
+  //htTag_     = jetParams.getUntrackedParameter<edm::InputTag>("htTag");
+  //mhtTag_    = jetParams.getUntrackedParameter<edm::InputTag>("mhtTag");
 
 
   localPi = acos(-1.0);
@@ -76,7 +103,10 @@ JetAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   using namespace reco;
   using namespace edm;
 
-  bool jetPreselection = false;
+  m_pfJetPreselection    = false;
+  m_jptJetPreselection   = false;
+  m_caloJetPreselection  = false;
+  m_trackJetPreselection = false;
   bool jet_result = true;
   edm::LogVerbatim("DiJetEvent::JetAnalyzer") << " Start  " << std::endl;
 
@@ -85,11 +115,11 @@ JetAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    * Store the information on the particle flow jets
    * 
    *****************************/
-  if (usePfJets_) {
+  if (usePFJets_) {
     edm::Handle< std::vector<pat::Jet> > pfjetHandle;
-    iEvent.getByLabel(pfjetTag_, pfjetHandle);
+    iEvent.getByLabel(pfJetTag_, pfjetHandle);
     if(!pfjetHandle.isValid()){
-      edm::LogWarning("DiJetEvent::JetAnalyzer") << "No PFJet results for InputTag "<< pfjetTag_;
+      edm::LogWarning("DiJetEvent::JetAnalyzer") << "No PFJet results for InputTag "<< pfJetTag_;
       return false;
     }
 
@@ -137,6 +167,87 @@ JetAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
   else m_NPFJets = 0;
 
+  //determine preselection requirement based on pf jets
+  if (m_NPFJets>selJetMaxEta_.size()) {
+    m_pfJetPreselection = true;
+    for (unsigned int pfj = 0; pfj < selJetMaxEta_.size(); ++pfj) {
+      if (m_PFJetEta[pfj] > selJetMaxEta_.at(pfj)) m_pfJetPreselection = false;
+      if (m_PFJetPt[pfj]  < selJetMinPt_.at(pfj))  m_pfJetPreselection = false;
+      if (m_PFJetFem[pfj] > selJetMaxEMF_.at(pfj)) m_pfJetPreselection = false;
+      if (m_PFJetFem[pfj] < selJetMinEMF_.at(pfj)) m_pfJetPreselection = false;
+    }
+  }
+
+  /*****************************
+   * Track Jets
+   * Store the jet information based on 
+   * AK5 (AK7,SC5,SC7,IC5,SC7) track jets
+   * 
+   *****************************/
+  if (useTrackJets_) {
+    edm::Handle< std::vector<pat::Jet> > trackjetHandle;
+    iEvent.getByLabel(trackJetTag_, trackjetHandle);
+    if(!trackjetHandle.isValid()){
+      edm::LogWarning("DiJetEvent::JetAnalyzer") << "No TrackJet results for InputTag "<< trackJetTag_;
+      return false;
+    }
+
+    int i = 0;
+    double tracksumpx = 0;
+    double tracksumpy = 0;
+    double tracksumpt = 0;
+        
+    m_NTrackJets = trackjetHandle->size();
+    if( m_NTrackJets > 50) m_NTrackJets = 50;
+    for(int track=0; track < m_NTrackJets; track++){
+      if ((*trackjetHandle)[track].pt() > jetMinPt_ ) {
+	if (fabs((*trackjetHandle)[track].eta()) < jetMaxEta_) {
+	  m_TrackJetEta[track]    = (*trackjetHandle)[track].eta();
+	  m_TrackJetPhi[track]    = (*trackjetHandle)[track].phi();
+	  m_TrackJetE[track]      = (*trackjetHandle)[track].energy();
+	  m_TrackJetEt[track]     = (*trackjetHandle)[track].et();
+	  m_TrackJetPx[track]     = (*trackjetHandle)[track].px();
+	  m_TrackJetPy[track]     = (*trackjetHandle)[track].py();
+	  m_TrackJetPz[track]     = (*trackjetHandle)[track].pz();
+	  m_TrackJetPt[track]     = (*trackjetHandle)[track].pt();
+	  m_TrackJetCharge[track] = (*trackjetHandle)[track].charge();
+	  
+	  if ((*trackjetHandle)[track].isCaloJet())
+	    m_TrackJetFem[track] = (*trackjetHandle)[track].emEnergyFraction();
+	  if ((*trackjetHandle)[track].isPFJet())
+	    m_TrackJetFem[track] = (*trackjetHandle)[track].neutralEmEnergyFraction()+
+	      (*trackjetHandle)[track].chargedEmEnergyFraction();
+	  
+	  //values that contribute to HT and MHT
+	  tracksumpt += (*trackjetHandle)[track].pt();
+	  tracksumpx += (*trackjetHandle)[track].px();
+	  tracksumpy += (*trackjetHandle)[track].py();
+	  //Increment for jets passing preselection
+	  i++;
+	}
+      }
+    }
+    m_TrackHt   = tracksumpt;
+    m_TrackMHx  = -tracksumpx;
+    m_TrackMHy  = -tracksumpy;
+    m_TrackMHt  = -sqrt(tracksumpx*tracksumpx+tracksumpy*tracksumpy);
+
+    m_NTrackJets = i;
+  }
+  else m_NTrackJets = 0;
+  
+  //determine preselection requirement based on pf jets
+  if (m_NTrackJets>selJetMaxEta_.size()) {
+    m_trackJetPreselection = true;
+    for (unsigned int trackj = 0; trackj < selJetMaxEta_.size(); ++trackj) {
+      if (m_TrackJetEta[trackj] > selJetMaxEta_.at(trackj)) m_trackJetPreselection = false;
+      if (m_TrackJetPt[trackj]  < selJetMinPt_.at(trackj))  m_trackJetPreselection = false;
+      if (m_TrackJetFem[trackj] > selJetMaxEMF_.at(trackj)) m_trackJetPreselection = false;
+      if (m_TrackJetFem[trackj] < selJetMinEMF_.at(trackj)) m_trackJetPreselection = false;
+    }
+  }
+
+
   /*****************************
    * Calo Jets
    * Store the jet information based on 
@@ -145,18 +256,18 @@ JetAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    *****************************/
   if (useCaloJets_) {
     edm::Handle< std::vector<pat::Jet> > jetHandle;
-    iEvent.getByLabel(jetTag_, jetHandle);
+    iEvent.getByLabel(caloJetTag_, jetHandle);
     if ( !jetHandle.isValid() ) {
-      edm::LogWarning("DiJetEvent::JetAnalyzer") << "No Jet results for InputTag " << jetTag_;
+      edm::LogWarning("DiJetEvent::JetAnalyzer") << "No Jet results for InputTag " << caloJetTag_;
       return false;
     }
 
     // get the JPT-corrected pat::Jets
     edm::Handle< std::vector<pat::Jet> > jptHandle;
-    iEvent.getByLabel(jptTag_, jptHandle);
+    iEvent.getByLabel(jptJetTag_, jptHandle);
     if ( !jptHandle.isValid() ) {
-      edm::LogWarning("DiJetEvent::JetAnalyzer") << "No JetCorrFactor results for InputTag " << jptTag_;
-      std::cout << "No JetCorrFactor results for InputTag " << jptTag_ << std::endl;
+      edm::LogWarning("DiJetEvent::JetAnalyzer") << "No JetCorrFactor results for InputTag " << jptJetTag_;
+      std::cout << "No JetCorrFactor results for InputTag " << jptJetTag_ << std::endl;
       return false;
     }
 
@@ -169,10 +280,6 @@ JetAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     double jetsumpy = 0;
     double jetsumpt = 0;
 
-    double jptsumpx = 0;
-    double jptsumpy = 0;
-    double jptsumpt = 0;
-
     double gensumpx = 0;
     double gensumpy = 0;
     double gensumpt = 0;
@@ -183,6 +290,10 @@ JetAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     
       if ((*jetHandle)[k].pt() > jetMinPt_) {
 	if (fabs((*jetHandle)[k].eta()) < jetMaxEta_) {
+	  //if ((*jetHandle)[k].emEnergyFraction() > jetMinEMF_) {
+	  //if ((*jetHandle)[k].jetID().fHPD < jetMaxfHPD_) {
+	  //if ((*jetHandle)[k].jetID().fRBX < jetMaxfRBX_) {
+	  //if ((*jetHandle)[k].jetID().n90Hits > jetMinN90_) {
 	
 	  jetsumpt += (*jetHandle)[k].pt();
 	  jetsumpx += (*jetHandle)[k].momentum().X();
@@ -193,26 +304,26 @@ JetAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	    gensumpx += (*jetHandle)[k].genJet()->momentum().X();
 	    gensumpy += (*jetHandle)[k].genJet()->momentum().Y();}
 	
-	
+	  
 	  for ( uint16_t n = 0; n < ( jptHandle->size() > 50 ? 50 : jptHandle->size() ); n++ ) {
 	    if ( matchJetsByCaloTowers( (*jptHandle)[n], (*jetHandle)[k] ) ) {
 	      pat::Jet jpt( (*jptHandle)[n] ); // no corrections by default
 	      m_CaloJetJPTCorrFactor[i] = (jpt.isCaloJet()) ? ( jpt.energy() / uncorrJet.energy() ) : -1 ;
 	    }
 	  }
-	
+	  
 	  const reco::TrackRefVector & mrTracksInJet = (*jetHandle)[k].associatedTracks();
-	
-	  m_JetTrackPt[k]          = 0;
-	  m_JetTrackPhi[k]         = 0;
-	  m_JetTrackPhiWeighted[k] = 0;
-	  m_JetTrackNo[k]          = 0;
+	  
+	  m_CaloJetTrackPt[k]          = 0;
+	  m_CaloJetTrackPhi[k]         = 0;
+	  m_CaloJetTrackPhiWeighted[k] = 0;
+	  m_CaloJetTrackNo[k]          = 0;
 	
 	  float JetPhi = (*jetHandle)[k].phi();
 	
 	  for (reco::TrackRefVector::iterator aIter = mrTracksInJet.begin();aIter!= mrTracksInJet.end();aIter++)
 	    {
-	      m_JetTrackPt[k] += (*aIter)->pt();
+	      m_CaloJetTrackPt[k] += (*aIter)->pt();
 	      float myPhi = (*aIter)->phi();
 	      if( JetPhi > 2. ) {
 		if(myPhi<0) myPhi = myPhi + 2*TMath::Pi();
@@ -220,23 +331,26 @@ JetAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	      if( JetPhi < -2. ) {
 		if(myPhi>0) myPhi = myPhi - 2*TMath::Pi();
 	      }
-	      m_JetTrackPhiWeighted[k] += (*aIter)->pt()*myPhi;
-	      m_JetTrackPhi[k]         += myPhi;
-	      m_JetTrackNo[k]++;
+	      m_CaloJetTrackPhiWeighted[k] += (*aIter)->pt()*myPhi;
+	      m_CaloJetTrackPhi[k]         += myPhi;
+	      m_CaloJetTrackNo[k]++;
 	    
 	    }
 	
-	  m_JetTrackPhiWeighted[k] = m_JetTrackPhiWeighted[k]/ m_JetTrackPt[k];
-	  m_JetTrackPhi[k]         = m_JetTrackPhi[k]/float(m_JetTrackNo[k]);
+	  m_CaloJetTrackPhiWeighted[k] = m_CaloJetTrackPhiWeighted[k]/ m_CaloJetTrackPt[k];
+	  m_CaloJetTrackPhi[k]         = m_CaloJetTrackPhi[k]/float(m_CaloJetTrackNo[k]);
 	
-	  m_CaloJetPt[i]  = (*jetHandle)[k].pt();
-	  m_CaloJetE[i]   = (*jetHandle)[k].energy();
-	  m_CaloJetEt[i]  = (*jetHandle)[k].et();
-	  m_CaloJetPx[i]  = (*jetHandle)[k].momentum().X();
-	  m_CaloJetPy[i]  = (*jetHandle)[k].momentum().Y();
-	  m_CaloJetPz[i]  = (*jetHandle)[k].momentum().Z();
-	  m_CaloJetEta[i] = (*jetHandle)[k].eta();
-	  m_CaloJetPhi[i] = (*jetHandle)[k].phi();
+	  m_CaloJetPt[i]   = (*jetHandle)[k].pt();
+	  m_CaloJetE[i]    = (*jetHandle)[k].energy();
+	  m_CaloJetEt[i]   = (*jetHandle)[k].et();
+	  m_CaloJetPx[i]   = (*jetHandle)[k].momentum().X();
+	  m_CaloJetPy[i]   = (*jetHandle)[k].momentum().Y();
+	  m_CaloJetPz[i]   = (*jetHandle)[k].momentum().Z();
+	  m_CaloJetEta[i]  = (*jetHandle)[k].eta();
+	  m_CaloJetPhi[i]  = (*jetHandle)[k].phi();
+	  m_CaloJetN90[i]  = (*jetHandle)[k].jetID().n90Hits;
+	  m_CaloJetfHPD[i] = (*jetHandle)[k].jetID().fHPD;
+	  m_CaloJetfRBX[i] = (*jetHandle)[k].jetID().fRBX;
 	
 	  if ((*jetHandle)[k].isCaloJet())
 	    m_CaloJetFem[i] = (*jetHandle)[k].emEnergyFraction();
@@ -244,9 +358,9 @@ JetAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	    m_CaloJetFem[i] = (*jetHandle)[k].neutralEmEnergyFraction()+
 	      (*jetHandle)[k].chargedEmEnergyFraction();
 	
-	  //m_JetBTag_TkCountHighEff[i] = (*jetHandle)[k].bDiscriminator("trackCountingHighEffBJetTags");
-	  //m_JetBTag_SimpleSecVtx[i]   = (*jetHandle)[k].bDiscriminator("simpleSecondaryVertexBJetTags");
-	  //m_JetBTag_CombSecVtx[i]     = (*jetHandle)[k].bDiscriminator("combinedSecondaryVertexBJetTags");
+	  //m_CaloJetBTag_TkCountHighEff[i] = (*jetHandle)[k].bDiscriminator("trackCountingHighEffBJetTags");
+	  //m_CaloJetBTag_SimpleSecVtx[i]   = (*jetHandle)[k].bDiscriminator("simpleSecondaryVertexBJetTags");
+	  //m_CaloJetBTag_CombSecVtx[i]     = (*jetHandle)[k].bDiscriminator("combinedSecondaryVertexBJetTags");
 	  m_JetPartonFlavour[i]   = (*jetHandle)[k].partonFlavour();
 	
 	  if((*jetHandle)[k].genJet()!= 0) {
@@ -292,15 +406,6 @@ JetAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	    m_JetPartonEnergy[i] = -999;
 	    m_JetPartonMother[i] = -999;
 	  }
-	
-	  // Add the JPT corrs
-	  int m_NJPTJets = jptHandle->size();
-	  if ( m_NJPTJets > 50 ) m_NJPTJets = 50;
-	  for ( int m = 0; m < m_NJPTJets; m++ ) {
-	    if( (*jptHandle)[m].originalObjectRef() == (*jetHandle)[k].originalObjectRef() ) {
-	      pat::Jet jet = ((*jptHandle)[m].isCaloJet()) ? (*jptHandle)[m].correctedJet("RAW") : (*jptHandle)[m];
-	    }
-	  }
 	  i++;
 	}
       }
@@ -312,19 +417,139 @@ JetAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     m_CaloMHy    = -jetsumpy;
     m_CaloMHt    = -sqrt(jetsumpx*jetsumpx+jetsumpy*jetsumpy);
     
-    m_JPTHt   = jptsumpt;
-    m_JPTMHx  = -jptsumpx;
-    m_JPTMHy  = -jptsumpy;
-    m_JPTMHt  = -sqrt(jptsumpx*jptsumpx+jptsumpy*jptsumpy);
-    
     m_GenHt  = gensumpt;
     m_GenMHx = -gensumpx;
     m_GenMHy = -gensumpy;
     m_GenMHt = -sqrt(gensumpx*gensumpx+gensumpy*gensumpy);
   }
 
-  return jet_result;
+  //determine preselection requirement based on calo jets
+  if (m_NCaloJets>selJetMaxEta_.size()) {
+    m_caloJetPreselection = true;
+    for (unsigned int caloj = 0; caloj < selJetMaxEta_.size(); ++caloj) {
+      if (m_CaloJetEta[caloj] > selJetMaxEta_.at(caloj)) m_caloJetPreselection = false;
+      if (m_CaloJetPt[caloj]  < selJetMinPt_.at(caloj))  m_caloJetPreselection = false;
+      if (m_CaloJetFem[caloj] > selJetMaxEMF_.at(caloj)) m_caloJetPreselection = false;
+      if (m_CaloJetFem[caloj] < selJetMinEMF_.at(caloj)) m_caloJetPreselection = false;
+    }
+  }
+
+
+  /*****************************
+   * JPT Jets
+   * Store the jet information based on 
+   * AK5 (AK7,SC5,SC7,IC5,SC7) JPT corrected calo jets
+   * 
+   *****************************/
+  if (useJPTJets_) {
+    edm::Handle< std::vector<pat::Jet> > jptHandle;
+    iEvent.getByLabel(jptJetTag_, jptHandle);
+    if ( !jptHandle.isValid() ) {
+      edm::LogWarning("DiJetEvent::JetAnalyzer") << "No Jet results for InputTag " << caloJetTag_;
+      return false;
+    }
+    
+    //get number of jets
+    m_NJPTJets = jptHandle->size();
+    
+    // Add the jets
+    int i = 0;
+    double jptsumpx = 0;
+    double jptsumpy = 0;
+    double jptsumpt = 0;
+    
+    if ( m_NJPTJets >50 ) m_NJPTJets = 50;
+    for (int k=0;k<m_NJPTJets;k++){
+      
+      if ((*jptHandle)[k].pt() > jetMinPt_) {
+	if (fabs((*jptHandle)[k].eta()) < jetMaxEta_) {
+	  //if ((*jptHandle)[k].emEnergyFraction() > jetMinEMF_) {
+	  //if ((*jptHandle)[k].jetID().fHPD < jetMaxfHPD_) {
+	  //if ((*jptHandle)[k].jetID().fRBX < jetMaxfRBX_) {
+	  //if ((*jptHandle)[k].jetID().n90Hits > jetMinN90_) {
+	  
+	  jptsumpt += (*jptHandle)[k].pt();
+	  jptsumpx += (*jptHandle)[k].momentum().X();
+	  jptsumpy += (*jptHandle)[k].momentum().Y();
+	  
+	  const reco::TrackRefVector & mrTracksInJet = (*jptHandle)[k].associatedTracks();
+	  
+	  m_JPTJetTrackPt[k]          = 0;
+	  m_JPTJetTrackPhi[k]         = 0;
+	  m_JPTJetTrackPhiWeighted[k] = 0;
+	  m_JPTJetTrackNo[k]          = 0;
+	
+	  float JetPhi = (*jptHandle)[k].phi();
+	
+	  for (reco::TrackRefVector::iterator aIter = mrTracksInJet.begin();aIter!= mrTracksInJet.end();aIter++)
+	    {
+	      m_JPTJetTrackPt[k] += (*aIter)->pt();
+	      float myPhi = (*aIter)->phi();
+	      if( JetPhi > 2. ) {
+		if(myPhi<0) myPhi = myPhi + 2*TMath::Pi();
+	      }
+	      if( JetPhi < -2. ) {
+		if(myPhi>0) myPhi = myPhi - 2*TMath::Pi();
+	      }
+	      m_JPTJetTrackPhiWeighted[k] += (*aIter)->pt()*myPhi;
+	      m_JPTJetTrackPhi[k]         += myPhi;
+	      m_JPTJetTrackNo[k]++;
+	    
+	    }
+	
+	  m_JPTJetTrackPhiWeighted[k] = m_JPTJetTrackPhiWeighted[k]/ m_JPTJetTrackPt[k];
+	  m_JPTJetTrackPhi[k]         = m_JPTJetTrackPhi[k]/float(m_JPTJetTrackNo[k]);
+	  
+	  
+	  m_JPTJetPt[i]   = (*jptHandle)[k].pt();
+	  m_JPTJetE[i]    = (*jptHandle)[k].energy();
+	  m_JPTJetEt[i]   = (*jptHandle)[k].et();
+	  m_JPTJetPx[i]   = (*jptHandle)[k].momentum().X();
+	  m_JPTJetPy[i]   = (*jptHandle)[k].momentum().Y();
+	  m_JPTJetPz[i]   = (*jptHandle)[k].momentum().Z();
+	  m_JPTJetEta[i]  = (*jptHandle)[k].eta();
+	  m_JPTJetPhi[i]  = (*jptHandle)[k].phi();
+	  m_JPTJetN90[i]  = (*jptHandle)[k].jetID().n90Hits;
+	  m_JPTJetfHPD[i] = (*jptHandle)[k].jetID().fHPD;
+	  m_JPTJetfRBX[i] = (*jptHandle)[k].jetID().fRBX;
+	  
+	  if ((*jptHandle)[k].isCaloJet())
+	    m_JPTJetFem[i] = (*jptHandle)[k].emEnergyFraction();
+	  if ((*jptHandle)[k].isPFJet())
+	    m_JPTJetFem[i] = (*jptHandle)[k].neutralEmEnergyFraction()+
+	      (*jptHandle)[k].chargedEmEnergyFraction();
+	  
+	  //m_JPTJetBTag_TkCountHighEff[i] = (*jptHandle)[k].bDiscriminator("trackCountingHighEffBJetTags");
+	  //m_JPTJetBTag_SimpleSecVtx[i]   = (*jptHandle)[k].bDiscriminator("simpleSecondaryVertexBJetTags");
+	  //m_JPTJetBTag_CombSecVtx[i]     = (*jptHandle)[k].bDiscriminator("combinedSecondaryVertexBJetTags");
+	  i++;
+	}
+      }
+    }
+    
+    m_NJPTJets  = i;
+    
+    m_JPTHt   = jptsumpt;
+    m_JPTMHx  = -jptsumpx;
+    m_JPTMHy  = -jptsumpy;
+    m_JPTMHt  = -sqrt(jptsumpx*jptsumpx+jptsumpy*jptsumpy);
+  }
+  
+  //determine preselection requirement based on jpt calo jets
+  if (m_NJPTJets>selJetMaxEta_.size()) {
+    m_jptJetPreselection = true;
+    for (unsigned int jptj = 0; jptj < selJetMaxEta_.size(); ++jptj) {
+      if (m_JPTJetEta[jptj] > selJetMaxEta_.at(jptj)) m_jptJetPreselection = false;
+      if (m_JPTJetPt[jptj]  < selJetMinPt_.at(jptj))  m_jptJetPreselection = false;
+      if (m_JPTJetFem[jptj] > selJetMaxEMF_.at(jptj)) m_jptJetPreselection = false;
+      if (m_JPTJetFem[jptj] < selJetMinEMF_.at(jptj)) m_jptJetPreselection = false;
+    }
+  }
+
+
+  jet_result = m_pfJetPreselection || m_trackJetPreselection || m_caloJetPreselection || m_jptJetPreselection;
   //mJetData->Fill();
+  return jet_result;
 }
 
 //________________________________________________________________________________________
@@ -368,112 +593,149 @@ JetAnalyzer::initTuple() {
 
   std::ostringstream variables; // Container for all variables
   
+  /*
   // Register this ntuple
   edm::Service<TFileService> fs;
 
   mJetData = fs->make<TTree>( "JetData", "data after cuts" );
   mJetData->SetAutoSave(10);
+  */
 
-  //add uncorrected non-cc particle flow jets
-  mJetData->Branch("NPFJets",   &m_NPFJets,   "NPFJets/int");  
-  mJetData->Branch("PFHt",      &m_PFHt,      "PFHt/double");
-  mJetData->Branch("PFMHx",     &m_PFMHx,     "PFMHx/double");
-  mJetData->Branch("PFMHy",     &m_PFMHy,     "PFMHy/double");
-  mJetData->Branch("PFMHt",     &m_PFMHt,     "PFMHt/double");
+  if (usePFJets_) {
+    //add uncorrected non-cc particle flow jets
+    mJetData->Branch("PFNJets",   &m_NPFJets,   "PFNJets/int");  
+    mJetData->Branch("PFHt",      &m_PFHt,      "PFHt/double");
+    mJetData->Branch("PFMHx",     &m_PFMHx,     "PFMHx/double");
+    mJetData->Branch("PFMHy",     &m_PFMHy,     "PFMHy/double");
+    mJetData->Branch("PFMHt",     &m_PFMHt,     "PFMHt/double");
+    
+    mJetData->Branch("PFJetE",       m_PFJetE,       "PFJetE[PFNJets]/double");
+    mJetData->Branch("PFJetEt",      m_PFJetEt,      "PFJetEt[PFNJets]/double");
+    mJetData->Branch("PFJetpt",      m_PFJetPt,      "PFJetpt[PFNJets]/double");
+    mJetData->Branch("PFJetpx",      m_PFJetPx,      "PFJetpx[PFNJets]/double");
+    mJetData->Branch("PFJetpy",      m_PFJetPy,      "PFJetpy[PFNJets]/double");
+    mJetData->Branch("PFJetpz",      m_PFJetPz,      "PFJetpz[PFNJets]/double");
+    mJetData->Branch("PFJeteta",     m_PFJetEta,     "PFJeteta[PFNJets]/double");
+    mJetData->Branch("PFJetphi",     m_PFJetPhi,     "PFJetphi[PFNJets]/double");
+    mJetData->Branch("PFJetFem",     m_PFJetFem,     "PFJetFem[PFNJets]/double");
+    mJetData->Branch("PFJetCharge",  m_PFJetCharge,  "PFJetCharge[PFNJets]/double");
+    //mJetData->Branch("PFJetHemi",    m_PFJetHemi,    "PFJetHemi[PFNJets]/int");
+    mJetData->Branch("PFJetPreselection", &m_pfJetPreselection, "PFJetPreselection/bool");
+  }
 
-  mJetData->Branch("PFJetE",       m_PFJetE,       "PFJetE[NPFJets]/double");
-  mJetData->Branch("PFJetEt",      m_PFJetEt,      "PFJetEt[NPFJets]/double");
-  mJetData->Branch("PFJetpt",      m_PFJetPt,      "PFJetpt[NPFJets]/double");
-  mJetData->Branch("PFJetpx",      m_PFJetPx,      "PFJetpx[NPFJets]/double");
-  mJetData->Branch("PFJetpy",      m_PFJetPy,      "PFJetpy[NPFJets]/double");
-  mJetData->Branch("PFJetpz",      m_PFJetPz,      "PFJetpz[NPFJets]/double");
-  mJetData->Branch("PFJeteta",     m_PFJetEta,     "PFJeteta[NPFJets]/double");
-  mJetData->Branch("PFJetphi",     m_PFJetPhi,     "PFJetphi[NPFJets]/double");
-  mJetData->Branch("PFJetFem",     m_PFJetFem,     "PFJetFem[NPFJets]/double");
-  mJetData->Branch("PFJetCharge",  m_PFJetCharge,  "PFJetCharge[NPFJets]/double");
-  //mJetData->Branch("PFJetHemi",    m_PFJetHemi,    "PFJetHemi[NPFJets]/int");
+  if (useTrackJets_) {
+    //add uncorrected non-cc track jets
+    mJetData->Branch("TrackNJets",   &m_NTrackJets,   "TrackNJets/int");  
+    mJetData->Branch("TrackHt",      &m_TrackHt,      "TrackHt/double");
+    mJetData->Branch("TrackMHx",     &m_TrackMHx,     "TrackMHx/double");
+    mJetData->Branch("TrackMHy",     &m_TrackMHy,     "TrackMHy/double");
+    mJetData->Branch("TrackMHt",     &m_TrackMHt,     "TrackMHt/double");
+    
+    mJetData->Branch("TrackJetE",       m_TrackJetE,       "TrackJetE[TrackNJets]/double");
+    mJetData->Branch("TrackJetEt",      m_TrackJetEt,      "TrackJetEt[TrackNJets]/double");
+    mJetData->Branch("TrackJetpt",      m_TrackJetPt,      "TrackJetpt[TrackNJets]/double");
+    mJetData->Branch("TrackJetpx",      m_TrackJetPx,      "TrackJetpx[TrackNJets]/double");
+    mJetData->Branch("TrackJetpy",      m_TrackJetPy,      "TrackJetpy[TrackNJets]/double");
+    mJetData->Branch("TrackJetpz",      m_TrackJetPz,      "TrackJetpz[TrackNJets]/double");
+    mJetData->Branch("TrackJeteta",     m_TrackJetEta,     "TrackJeteta[TrackNJets]/double");
+    mJetData->Branch("TrackJetphi",     m_TrackJetPhi,     "TrackJetphi[TrackNJets]/double");
+    mJetData->Branch("TrackJetFem",     m_TrackJetFem,     "TrackJetFem[TrackNJets]/double");
+    mJetData->Branch("TrackJetCharge",  m_TrackJetCharge,  "TrackJetCharge[TrackNJets]/double");
+    //mJetData->Branch("TrackJetHemi",    m_TrackJetHemi,    "TrackJetHemi[TrackNJets]/int");
+    mJetData->Branch("TrackJetPreselection", &m_trackJetPreselection, "TrackJetPreselection/bool");
+  }
 
+  if (useCaloJets_) {
+    //add uncorrected non-cc jets
+    mJetData->Branch("CaloNJets",   &m_NCaloJets,   "CaloNJets/int");  
+    mJetData->Branch("CaloHt",      &m_CaloHt,      "CaloHt/double");
+    mJetData->Branch("CaloMHx",     &m_CaloMHx,     "CaloMHx/double");
+    mJetData->Branch("CaloMHy",     &m_CaloMHy,     "CaloMHy/double");
+    mJetData->Branch("CaloMHt",     &m_CaloMHt,     "CaloMHt/double");
+    
+    mJetData->Branch("CaloJetE",    m_CaloJetE,    "CaloJetE[CaloNJets]/double");
+    mJetData->Branch("CaloJetEt",   m_CaloJetEt,   "CaloJetEt[CaloNJets]/double");
+    mJetData->Branch("CaloJetpt",   m_CaloJetPt,   "CaloJetpt[CaloNJets]/double");
+    mJetData->Branch("CaloJetpx",   m_CaloJetPx,   "CaloJetpx[CaloNJets]/double");
+    mJetData->Branch("CaloJetpy",   m_CaloJetPy,   "CaloJetpy[CaloNJets]/double");
+    mJetData->Branch("CaloJetpz",   m_CaloJetPz,   "CaloJetpz[CaloNJets]/double");
+    mJetData->Branch("CaloJeteta",  m_CaloJetEta,  "CaloJeteta[CaloNJets]/double");
+    mJetData->Branch("CaloJetphi",  m_CaloJetPhi,  "CaloJetphi[CaloNJets]/double");
+    mJetData->Branch("CaloJetFem",  m_CaloJetFem,  "CaloJetFem[CaloNJets]/double");
+    mJetData->Branch("CaloJetfHPD", m_CaloJetfHPD, "CaloJetfHPD[CaloNJets]/double");
+    mJetData->Branch("CaloJetfRBX", m_CaloJetfRBX, "CaloJetfRBX[CaloNJets]/double");
+    mJetData->Branch("CaloJetn90",  m_CaloJetN90,  "CaloJetn90[CaloNJets]/double");
+    //mJetData->Branch("CaloJetHemi", m_CaloJetHemi, "CaloJetHemi[CaloNJets]/int");
+    mJetData->Branch("CaloJetPreselection", &m_caloJetPreselection, "CaloJetPreselection/bool");
 
-  //add uncorrected non-cc jets
-  mJetData->Branch("NCaloJets",   &m_NCaloJets,   "NCaloJets/int");  
-  mJetData->Branch("CaloHt",      &m_CaloHt,      "CaloHt/double");
-  mJetData->Branch("CaloMHx",     &m_CaloMHx,     "CaloMHx/double");
-  mJetData->Branch("CaloMHy",     &m_CaloMHy,     "CaloMHy/double");
-  mJetData->Branch("CaloMHt",     &m_CaloMHt,     "CaloMHt/double");
+    //jet correction factors
+    //mJetData->Branch("CaloJetMCcorrFactor",  m_CaloJetMCCorrFactor,  "m_CaloJetMCCorrFactor[JPTNJets]/double");
+    mJetData->Branch("CaloJetJPTcorrFactor", m_CaloJetJPTCorrFactor, "m_CaloJetJPTCorrFactor[CaloNJets]/double");
+    //b-tagging information
+    //mJetData->Branch("CaloJetBTag_TkCountHighEff", m_CaloJetBTag_TkCountHighEff, "CaloJetBTag_TkCountHighEff[JPTNJetsJ/float");
+    //mJetData->Branch("CaloJetBTag_SimpleSecVtx",   m_CaloJetBTag_SimpleSecVtx,   "CaloJetBTag_SimpleSecVtx[JPTNJets]/float");
+    //mJetData->Branch("CaloJetBTag_CombSecVtx",     m_CaloJetBTag_CombSecVtx,     "CaloJetBTag_CombSecVtx[JPTNJets]/float");
 
-  mJetData->Branch("CaloJetE",    m_CaloJetE,    "CaloJetE[NCaloJets]/double");
-  mJetData->Branch("CaloJetEt",   m_CaloJetEt,   "CaloJetEt[NCaloJets]/double");
-  mJetData->Branch("CaloJetpt",   m_CaloJetPt,   "CaloJetpt[NCaloJets]/double");
-  mJetData->Branch("CaloJetpx",   m_CaloJetPx,   "CaloJetpx[NCaloJets]/double");
-  mJetData->Branch("CaloJetpy",   m_CaloJetPy,   "CaloJetpy[NCaloJets]/double");
-  mJetData->Branch("CaloJetpz",   m_CaloJetPz,   "CaloJetpz[NCaloJets]/double");
-  mJetData->Branch("CaloJeteta",  m_CaloJetEta,  "CaloJeteta[NCaloJets]/double");
-  mJetData->Branch("CaloJetphi",  m_CaloJetPhi,  "CaloJetphi[NCaloJets]/double");
-  mJetData->Branch("CaloJetFem",  m_CaloJetFem,  "CaloJetFem[NCaloJets]/double");
-  //mJetData->Branch("CaloJetHemi", m_CaloJetHemi, "CaloJetHemi[NCaloJets]/int");
+    //information about associated gen jets
+    mJetData->Branch("GenHt",     &m_GenHt,     "GenHt/double");
+    mJetData->Branch("GenMHt",    &m_GenMHt,    "GenMHt/double");
+    mJetData->Branch("GenJetE" ,  m_GenJetE,   "GenJetE[CaloNJets]/double");
+    mJetData->Branch("GenJetEt",  m_GenJetEt,  "GenJetEt[CaloNJets]/double");
+    mJetData->Branch("GenJetpt",  m_GenJetPt,  "GenJetpt[CaloNJets]/double");
+    mJetData->Branch("GenJetpx",  m_GenJetPx,  "GenJetpx[CaloNJets]/double");
+    mJetData->Branch("GenJetpy",  m_GenJetPy,  "GenJetpy[CaloNJets]/double");
+    mJetData->Branch("GenJetpz",  m_GenJetPz,  "GenJetpz[CaloNJets]/double");
+    mJetData->Branch("GenJeteta", m_GenJetEta, "GenJeteta[CaloNJets]/double");
+    mJetData->Branch("GenJetphi", m_GenJetPhi, "GenJetphi[CaloNJets]/double");
+    
+    //information about associated partons
+    mJetData->Branch("JetPartonId",         m_JetPartonId,         "JetPartonId[CaloNJets]/int"); 
+    mJetData->Branch("JetPartonMother",     m_JetPartonMother,     "JetPartonMother[CaloNJets]/int"); 
+    mJetData->Branch("JetPartonPx",         m_JetPartonPx,         "JetPartonPx[CaloNJets]/double"); 
+    mJetData->Branch("JetPartonPy",         m_JetPartonPy,         "JetPartonPy[CaloNJets]/double"); 
+    mJetData->Branch("JetPartonPz",         m_JetPartonPz,         "JetPartonPz[CaloNJets]/double"); 
+    mJetData->Branch("JetPartonEt",         m_JetPartonEt,         "JetPartonEt[CaloNJets]/double"); 
+    mJetData->Branch("JetPartonE" ,         m_JetPartonEnergy,     "JetPartonE[CaloNJets]/double"); 
+    mJetData->Branch("JetPartonPhi",        m_JetPartonPhi,        "JetPartonPhi[CaloNJets]/double"); 
+    mJetData->Branch("JetPartonEta",        m_JetPartonEta,        "JetPartonEta[CaloNJets]/double"); 
+    mJetData->Branch("JetPartonFlavour",    m_JetPartonFlavour,    "JetPartonFlavour[CaloNJets]/int");
+    
+    //information about associated tracks
+    mJetData->Branch("CaloJetTrackPt",          m_CaloJetTrackPt,          "CaloJetTrackPt[CaloNJets]/double"); 
+    mJetData->Branch("CaloJetTrackPhi",         m_CaloJetTrackPhi,         "CaloJetTrackPhi[CaloNJets]/double"); 
+    mJetData->Branch("CaloJetTrackPhiWeighted", m_CaloJetTrackPhiWeighted, "CaloJetTrackPhiWeighted[CaloNJets]/double"); 
+    mJetData->Branch("CaloJetTrackNo",          m_CaloJetTrackNo,          "CaloJetTrackNo[CaloNJets]/int");
+  }
 
-  //jet correction factors
-  //mJetData->Branch("CaloJetMCcorrFactor",  m_CaloJetMCCorrFactor,  "m_CaloJetMCCorrFactor[NCaloJETs]/double");
-  mJetData->Branch("CaloJetJPTcorrFactor", m_CaloJetJPTCorrFactor, "m_CaloJetJPTCorrFactor[NCaloJETs]/double");
-  //b-tagging information
-  //mJetData->Branch("JetBTag_TkCountHighEff", m_JetBTag_TkCountHighEff, "JetBTag_TkCountHighEff[Njets]/float");
-  //mJetData->Branch("JetBTag_SimpleSecVtx",   m_JetBTag_SimpleSecVtx,   "JetBTag_SimpleSecVtx[Njets]/float");
-  //mJetData->Branch("JetBTag_CombSecVtx",     m_JetBTag_CombSecVtx,     "JetBTag_CombSecVtx[Njets]/float");
-
-  //information about associated gen jets
-  mJetData->Branch("GenHt",     &m_GenHt,     "GenHt/double");
-  mJetData->Branch("GenMHt",    &m_GenMHt,    "GenMHt/double");
-  mJetData->Branch("GenJetE" ,  m_GenJetE,   "GenJetE[NCaloJets]/double");
-  mJetData->Branch("GenJetEt",  m_GenJetEt,  "GenJetEt[NCaloJets]/double");
-  mJetData->Branch("GenJetpt",  m_GenJetPt,  "GenJetpt[NCaloJets]/double");
-  mJetData->Branch("GenJetpx",  m_GenJetPx,  "GenJetpx[NCaloJets]/double");
-  mJetData->Branch("GenJetpy",  m_GenJetPy,  "GenJetpy[NCaloJets]/double");
-  mJetData->Branch("GenJetpz",  m_GenJetPz,  "GenJetpz[NCaloJets]/double");
-  mJetData->Branch("GenJeteta", m_GenJetEta, "GenJeteta[NCaloJets]/double");
-  mJetData->Branch("GenJetphi", m_GenJetPhi, "GenJetphi[NCaloJets]/double");
-  
-  //information about associated partons
-  mJetData->Branch("JetPartonId",         m_JetPartonId,         "JetPartonId[NCaloJets]/int"); 
-  mJetData->Branch("JetPartonMother",     m_JetPartonMother,     "JetPartonMother[NCaloJets]/int"); 
-  mJetData->Branch("JetPartonPx",         m_JetPartonPx,         "JetPartonPx[NCaloJets]/double"); 
-  mJetData->Branch("JetPartonPy",         m_JetPartonPy,         "JetPartonPy[NCaloJets]/double"); 
-  mJetData->Branch("JetPartonPz",         m_JetPartonPz,         "JetPartonPz[NCaloJets]/double"); 
-  mJetData->Branch("JetPartonEt",         m_JetPartonEt,         "JetPartonEt[NCaloJets]/double"); 
-  mJetData->Branch("JetPartonE" ,         m_JetPartonEnergy,     "JetPartonE[NCaloJets]/double"); 
-  mJetData->Branch("JetPartonPhi",        m_JetPartonPhi,        "JetPartonPhi[NCaloJets]/double"); 
-  mJetData->Branch("JetPartonEta",        m_JetPartonEta,        "JetPartonEta[NCaloJets]/double"); 
-  mJetData->Branch("JetPartonFlavour",    m_JetPartonFlavour,    "JetPartonFlavour[NCaloJets]/int");
-
-  //information about associated tracks
-  mJetData->Branch("JetTrackPt",          m_JetTrackPt,          "JetTrackPt[NCaloJets]/double"); 
-  mJetData->Branch("JetTrackPhi",         m_JetTrackPhi,         "JetTrackPhi[NCaloJets]/double"); 
-  mJetData->Branch("JetTrackPhiWeighted", m_JetTrackPhiWeighted, "JetTrackPhiWeighted[NCaloJets]/double"); 
-  mJetData->Branch("JetTrackNo",          m_JetTrackNo,          "JetTrackNo[NCaloJets]/int");
-
-
-  ////add JPT corrected calo jets
-  //mJetData->Branch("NJPTjets",   &m_NJPTjets,   "NJPTjets/int");  
-  //mJetData->Branch("JPTHt",      &m_JPTHt,      "JPTHt/double");
-  //mJetData->Branch("JPTMHx",     &m_JPTMHx,     "JPTMHx/double");
-  //mJetData->Branch("JPTMHy",     &m_JPTMHy,     "JPTMHy/double");
-  //mJetData->Branch("JPTMHt",     &m_JPTMHt,     "JPTMHt/double");
-  //
-  //mJetData->Branch("JPTJetE",    m_JPTJetE,    "JPTJetE[NJPTJets]/double");
-  //mJetData->Branch("JPTJetEt",   m_JPTJetEt,   "JPTJetEt[NJPTJets]/double");
-  //mJetData->Branch("JPTJetpt",   m_JPTJetPt,   "JPTJetpt[NJPTJets]/double");
-  //mJetData->Branch("JPTJetpx",   m_JPTJetPx,   "JPTJetpx[NJPTJets]/double");
-  //mJetData->Branch("JPTJetpy",   m_JPTJetPy,   "JPTJetpy[NJPTJets]/double");
-  //mJetData->Branch("JPTJetpz",   m_JPTJetPz,   "JPTJetpz[NJPTJets]/double");
-  //mJetData->Branch("JPTJeteta",  m_JPTJetEta,  "JPTJeteta[NJPTJets]/double");
-  //mJetData->Branch("JPTJetphi",  m_JPTJetPhi,  "JPTJetphi[NJPTJets]/double");
-  //mJetData->Branch("JPTJetFem",  m_JPTJetFem,  "JPTJetFem[NJPTJets]/double");
-  //mJetData->Branch("JPTJetHemi", m_JPTJetHemi, "JPTJetHemi[NJPTJets]/int");
-
-  //jet correction factors
-  //mJetData->Branch("JPTJetMCcorrFactor",  m_JPTJetMCCorrFactor,  "m_JPTJetMCCorrFactor[NJPTJets]/double");
-  //mJetData->Branch("JPTJetJPTcorrFactor", m_JPTJetJPTCorrFactor, "m_JPTJetJPTCorrFactor[NJPTJets]/double");
-
-
+  if (useJPTJets_) {
+    //add jpt corrected non-cc jets
+    mJetData->Branch("JPTNJets",   &m_NJPTJets,   "JPTNJets/int");  
+    mJetData->Branch("JPTHt",      &m_JPTHt,      "JPTHt/double");
+    mJetData->Branch("JPTMHx",     &m_JPTMHx,     "JPTMHx/double");
+    mJetData->Branch("JPTMHy",     &m_JPTMHy,     "JPTMHy/double");
+    mJetData->Branch("JPTMHt",     &m_JPTMHt,     "JPTMHt/double");
+    
+    mJetData->Branch("JPTJetE",    m_JPTJetE,    "JPTJetE[JPTNJets]/double");
+    mJetData->Branch("JPTJetEt",   m_JPTJetEt,   "JPTJetEt[JPTNJets]/double");
+    mJetData->Branch("JPTJetpt",   m_JPTJetPt,   "JPTJetpt[JPTNJets]/double");
+    mJetData->Branch("JPTJetpx",   m_JPTJetPx,   "JPTJetpx[JPTNJets]/double");
+    mJetData->Branch("JPTJetpy",   m_JPTJetPy,   "JPTJetpy[JPTNJets]/double");
+    mJetData->Branch("JPTJetpz",   m_JPTJetPz,   "JPTJetpz[JPTNJets]/double");
+    mJetData->Branch("JPTJeteta",  m_JPTJetEta,  "JPTJeteta[JPTNJets]/double");
+    mJetData->Branch("JPTJetphi",  m_JPTJetPhi,  "JPTJetphi[JPTNJets]/double");
+    mJetData->Branch("JPTJetFem",  m_JPTJetFem,  "JPTJetFem[JPTNJets]/double");
+    mJetData->Branch("JPTJetfHPD", m_JPTJetfHPD, "JPTJetfHPD[JPTNJets]/double");
+    mJetData->Branch("JPTJetfRBX", m_JPTJetfRBX, "JPTJetfRBX[JPTNJets]/double");
+    mJetData->Branch("JPTJetn90",  m_JPTJetN90,  "JPTJetn90[JPTNJets]/double");
+    //mJetData->Branch("JPTJetHemi", m_JPTJetHemi, "JPTJetHemi[JPTNJets]/int");
+    mJetData->Branch("JPTJetPreselection", &m_jptJetPreselection, "JPTJetPreselection/bool");
+    
+    //information about associated tracks
+    mJetData->Branch("JPTJetTrackPt",          m_JPTJetTrackPt,          "JPTJetTrackPt[JPTNJets]/double"); 
+    mJetData->Branch("JPTJetTrackPhi",         m_JPTJetTrackPhi,         "JPTJetTrackPhi[JPTNJets]/double"); 
+    mJetData->Branch("JPTJetTrackPhiWeighted", m_JPTJetTrackPhiWeighted, "JPTJetTrackPhiWeighted[JPTNJets]/double"); 
+    mJetData->Branch("JPTJetTrackNo",          m_JPTJetTrackNo,          "JPTJetTrackNo[JPTNJets]/int");
+  }
   
   edm::LogInfo("DiJetEvent::JetAnalyzer") << "Ntuple variables " << variables.str();
   

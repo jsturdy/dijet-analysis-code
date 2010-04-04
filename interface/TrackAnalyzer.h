@@ -39,10 +39,9 @@
 //
 class TrackAnalyzer {
  public:
-  TrackAnalyzer(const edm::ParameterSet&);
+  TrackAnalyzer(const edm::ParameterSet&, TTree*);
   ~TrackAnalyzer();
   
- private:
   //*** CMSSW interface
   /// Called once per job, at start
   void beginJob(const edm::EventSetup&);
@@ -57,17 +56,20 @@ class TrackAnalyzer {
   void initTuple();
   //void bookHealthPlots();
   /// Fill all plots for an event
-  void fillTuple( const edm::Event& ) {mTrackData->Fill(); }
-  //void fillHealthPlots( const edm::Event& ) {mTrackData->Fill(); }
+  //void fillTuple( ) {mTrackData->Fill(); }
+  //void fillTuple( ) {mAllData->Fill(); }
+  //void fillHealthPlots( ) {mTrackData->Fill(); }
 
 
 
  private:
 
   // Data tags
-  edm::InputTag  genTag_;
+  edm::ParameterSet trackParams;
+  edm::InputTag  trackTag_;
   bool doMCData_;
-
+  int  debug_;
+  //TTree * mAllData;        /// Will contain all the data
   TTree * mTrackData;      /// Will contain the additional track parameters
 
   bool track_result;

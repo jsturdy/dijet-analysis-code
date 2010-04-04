@@ -27,17 +27,7 @@
 //#include "SusyAnalysis/EventSelector/interface/SusyEventSelector.h"
 //#include "SusyAnalysis/EventSelector/interface/SelectorSequence.h"
 
-//#include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
-#include "DataFormats/PatCandidates/interface/MET.h"
-#include "DataFormats/PatCandidates/interface/Electron.h"
-#include "DataFormats/PatCandidates/interface/Muon.h"
-
-//#include "DataFormats/L1Trigger/interface/L1ParticleMap.h"
-#include "DataFormats/Common/interface/TriggerResults.h"
-#include "FWCore/Framework/interface/TriggerNames.h"
-
-//#include "UserCode/AnalysisTools/test/ALPGENParticleId.cc"
 
 //#include "PhysicsTools/Utilities/interface/deltaPhi.h"
 //#include "PhysicsTools/Utilities/interface/deltaR.h"
@@ -50,10 +40,9 @@
 
 class JetAnalyzer {
  public:
-  JetAnalyzer(const edm::ParameterSet&);
+  JetAnalyzer(const edm::ParameterSet&, TTree*);
   ~JetAnalyzer();
   
- private:
   //*** CMSSW interface
   /// Called once per job, at start
   void beginJob(const edm::EventSetup&) ;
@@ -62,18 +51,14 @@ class JetAnalyzer {
   /// Called once per job, at end
   void endJob();
   
-  /// Print a summary of counts for all selectors
-  //  virtual void printSummary(void);
-  // Print an HLT trigger report
-  void printHLTreport(void); // georgia
-  
   //*** Plotting
   /// Define all plots
   void initTuple();
-  void bookHealthPlots();
+  //void bookHealthPlots();
   /// Fill all plots for an event
-  void fillTuple( const edm::Event& ) {mJetData->Fill(); }
-  //void fillHealthPlots( const edm::Event& ) {mJetData->Fill(); }
+  //void fillTuple( ) {mJetData->Fill(); }
+  //void fillTuple( ) {mAllData->Fill(); }
+  //void fillHealthPlots( ) {mJetData->Fill(); }
 
   //  virtual bool filter(const edm::Event& evt,const edm::EventSetup& iSetup );
 
@@ -83,24 +68,37 @@ class JetAnalyzer {
   bool matchJetsByCaloTowers( const pat::Jet&, const pat::Jet& );
 
   // Configuration parameters
-  double jetMaxEta_, jetMinPt_;  /// for preselection cuts on jets and to calculate HT and MHT
+  edm::ParameterSet jetParams;
+  int  minNJets_;                  /// for preselection cuts on jets and to calculate HT and MHT
+  double jetMaxEta_;  /// for preselection cuts on jets and to calculate HT and MHT
+  double jetMinPt_;   /// for preselection cuts on jets and to calculate HT and MHT
+  double jetMaxEMF_;   /// for preselection cuts on jets and to calculate HT and MHT
+  double jetMinEMF_;   /// for preselection cuts on jets and to calculate HT and MHT
+  std::vector<double> selJetMaxEta_;  /// for preselection cuts on jets and to calculate HT and MHT
+  std::vector<double> selJetMinPt_;   /// for preselection cuts on jets and to calculate HT and MHT
+  std::vector<double> selJetMaxEMF_;   /// for preselection cuts on jets and to calculate HT and MHT
+  std::vector<double> selJetMinEMF_;   /// for preselection cuts on jets and to calculate HT and MHT
+
+  int   debug_;
   bool doMCData_;
-  bool usePfJets_;
+  bool usePFJets_;
   bool useJPTJets_;
   bool useCaloJets_;
+  bool useTrackJets_;
 
   // Data tags
-  edm::InputTag pfjetTag_;
-  edm::InputTag jptTag_;
-  edm::InputTag jetTag_;
-  edm::InputTag genTag_;
+  edm::InputTag pfJetTag_;
+  edm::InputTag jptJetTag_;
+  edm::InputTag caloJetTag_;
+  edm::InputTag trackJetTag_;
+  edm::InputTag genJetTag_;
   edm::InputTag mhtTag_;
   edm::InputTag htTag_;
     
   // Plots
   TNtuple* ntuple_;      /// Will contain all the selector information we want to keep
-  TTree * mAllData;      /// Will contain the additional di-jet specific data
-  TTree * mJetData;
+  //TTree * mAllData;      /// Will contain the additional di-jet specific data
+  TTree * mJetData;      /// Will contain the data passing the jet selection
 
   //PF Jets
   int    m_NPFJets;
@@ -118,6 +116,25 @@ class JetAnalyzer {
   double m_PFJetPt[50];
   double m_PFJetCharge[50];
   double m_PFJetFem[50];
+  bool   m_pfJetPreselection;
+
+  //TrackJets
+  int    m_NTrackJets;
+  double m_TrackHt;
+  double m_TrackMHx;
+  double m_TrackMHy;
+  double m_TrackMHt;
+  double m_TrackJetEta[50];
+  double m_TrackJetPhi[50];
+  double m_TrackJetE[50];
+  double m_TrackJetEt[50];
+  double m_TrackJetPx[50];
+  double m_TrackJetPy[50];
+  double m_TrackJetPz[50];
+  double m_TrackJetPt[50];
+  double m_TrackJetCharge[50];
+  double m_TrackJetFem[50];
+  bool   m_trackJetPreselection;
 
   //Calo Jets no JPT corrections
   int    m_NCaloJets;
@@ -134,19 +151,60 @@ class JetAnalyzer {
   double m_CaloJetEta[50];
   double m_CaloJetPhi[50];
   double m_CaloJetFem[50];
+  double m_CaloJetfHPD[50];
+  double m_CaloJetfRBX[50];
+  double m_CaloJetN90[50];
   int    m_CaloJetHemi[50];
+  bool   m_caloJetPreselection;
 
+  // track info:
+  int    m_CaloJetTrackNo[50];
+  double m_CaloJetTrackPhi[50];
+  double m_CaloJetTrackPhiWeighted[50];
+  double m_CaloJetTrackPt[50];
+
+  //calo jet corrections
   double m_CaloJetMCCorrFactor[50];
   double m_CaloJetJPTCorrFactor[50];
 
-  // track info:
-  int    m_JetTrackNo[50];
-  double m_JetTrackPhi[50];
-  double m_JetTrackPhiWeighted[50];
-  double m_JetTrackPt[50];
+  float m_CaloJetsBTag_TkCountHighEff[50];
+  float m_CaloJetsBTag_SimpleSecVtx[50];
+  float m_CaloJetsBTag_CombSecVtx[50];
 
+  //Calo Jets with JPT corrections
+  int    m_NJPTJets;
+  double m_JPTHt;
+  double m_JPTMHx;
+  double m_JPTMHy;
+  double m_JPTMHt;
+  double m_JPTJetEt[50];
+  double m_JPTJetPt[50];
+  double m_JPTJetPx[50];
+  double m_JPTJetPy[50];
+  double m_JPTJetPz[50];
+  double m_JPTJetE[50];
+  double m_JPTJetEta[50];
+  double m_JPTJetPhi[50];
+  double m_JPTJetFem[50];
+  double m_JPTJetfHPD[50];
+  double m_JPTJetfRBX[50];
+  double m_JPTJetN90[50];
+  int    m_JPTJetHemi[50];
+  bool   m_jptJetPreselection;
+
+  // track info:
+  int    m_JPTJetTrackNo[50];
+  double m_JPTJetTrackPhi[50];
+  double m_JPTJetTrackPhiWeighted[50];
+  double m_JPTJetTrackPt[50];
+
+  //Cross cleaned jets
   double m_ccJetMCCorrFactor[50];
   double m_ccJetJPTCorrFactor[50];
+
+  float m_JPTJetsBTag_TkCountHighEff[50];
+  float m_JPTJetsBTag_SimpleSecVtx[50];
+  float m_JPTJetsBTag_CombSecVtx[50];
 
   bool    m_ccJetAssoc[50];
   double  m_ccJetAssoc_E[50];
@@ -165,10 +223,6 @@ class JetAnalyzer {
   double m_JetPartonPhi[50];
   double m_JetPartonEta[50];
 
-  float m_JetsBTag_TkCountHighEff[50];
-  float m_JetsBTag_SimpleSecVtx[50];
-  float m_JetsBTag_CombSecVtx[50];
-
   //Generator level information
   double m_GenHt;
   double m_GenMHx;
@@ -184,26 +238,26 @@ class JetAnalyzer {
   double m_GenJetPhi[50];
 
 
-  //JPT corrected Calo Jets
-  int    m_NJPTJets;
-  double m_JPTHt;
-  double m_JPTMHx;
-  double m_JPTMHy;
-  double m_JPTMHt;
-  double m_JPTJetEt[50];
-  double m_JPTJetPt[50];
-  double m_JPTJetPx[50];
-  double m_JPTJetPy[50];
-  double m_JPTJetPz[50];
-  double m_JPTJetE[50];
-  double m_JPTJetEta[50];
-  double m_JPTJetPhi[50];
-  double m_JPTJetFem[50];
-  int    m_JPTJetHemi[50];
-  int    m_JPTJetPartonFlavour[50];
-
-  double m_JPTJetMCCorrFactor[50];
-  double m_JPTJetJPTCorrFactor[50];
+//  //JPT corrected Calo Jets
+//  int    m_NJPTJets;
+//  double m_JPTHt;
+//  double m_JPTMHx;
+//  double m_JPTMHy;
+//  double m_JPTMHt;
+//  double m_JPTJetEt[50];
+//  double m_JPTJetPt[50];
+//  double m_JPTJetPx[50];
+//  double m_JPTJetPy[50];
+//  double m_JPTJetPz[50];
+//  double m_JPTJetE[50];
+//  double m_JPTJetEta[50];
+//  double m_JPTJetPhi[50];
+//  double m_JPTJetFem[50];
+//  int    m_JPTJetHemi[50];
+//  int    m_JPTJetPartonFlavour[50];
+//
+//  double m_JPTJetMCCorrFactor[50];
+//  double m_JPTJetJPTCorrFactor[50];
 
 
   std::string outputFileName_;

@@ -40,10 +40,9 @@
 //
 class TriggerAnalyzer {
  public:
-  TriggerAnalyzer(const edm::ParameterSet&);
+  TriggerAnalyzer(const edm::ParameterSet&, TTree*);
   ~TriggerAnalyzer();
   
- private:
   //*** CMSSW interface
   /// Called once per job, at start
   void beginJob(const edm::EventSetup&) ;
@@ -62,10 +61,11 @@ class TriggerAnalyzer {
   //*** Plotting
   /// Define all plots
   void initTuple();
-  void bookHealthPlots();
+  //void bookHealthPlots();
   /// Fill all plots for an event
-  void fillTuple( const edm::Event& ) {mTriggerData->Fill(); }
-  //void fillHealthPlots( const edm::Event& ) {mTriggerData->Fill(); }
+  //void fillTuple( ) {mTriggerData->Fill(); }
+  //void fillTuple( ) {mAllData->Fill(); }
+  //void fillHealthPlots( ) {mTriggerData->Fill(); }
 
 
 
@@ -74,21 +74,29 @@ private:
   bool doMCData_;                 /// switch to turn off generator level information
 
   // Plots
-  TNtuple* ntuple_;      /// Will contain all the selector information we want to keep
-  TTree * mAllData;      /// Will contain the additional di-jet specific data
+  //TTree * mAllData;      /// Will contain the additional di-jet specific data
   TTree * mTriggerData;      /// Will contain the additional di-jet specific data
 
   int m_nHLT;
   int m_HLTArray[200];
+  std::string m_HLTNames[200];
 
   bool m_HLT1JET;
   bool m_HLT2JET;
-  bool m_HLT1MET1HT;
+  bool m_HLT1MET;
+  bool m_HLT1HT;
+  bool m_HLT1HT1MHT;
   bool m_HLT1Muon;
+
+  bool m_L1Muon1;
+  bool m_L1Muon2;
+  bool m_L1Muon3;
+  bool m_L1Muon4;
 
   bool trigger_result;
 
   // Data tags
+  edm::ParameterSet triggerParams;
   edm::InputTag triggerResults_; 
   std::vector<std::string> pathNames_;
 
@@ -103,6 +111,8 @@ private:
   std::vector<unsigned int> hlAccept_; // # of events accepted by HLT[i]
   std::vector<unsigned int> hlErrors_; // # of events with error in HLT[i]
   bool init_;                          // vectors initialised or not
+  
+  int debug_;
 
   double localPi;
   unsigned int *mSelectorResults;

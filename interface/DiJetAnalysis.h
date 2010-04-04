@@ -27,8 +27,9 @@
 //#include "JSturdy/DiJetAnalysis/interface/HemisphereAnalyzer.h"
 #include "JSturdy/DiJetAnalysis/interface/LeptonAnalyzer.h"
 #include "JSturdy/DiJetAnalysis/interface/VertexAnalyzer.h"
-//#include "JSturdy/DiJetAnalysis/interface/TrackAnalyzer.h"
-//#include "JSturdy/DiJetAnalysis/interface/TriggerAnalyzer.h"
+#include "JSturdy/DiJetAnalysis/interface/PhotonAnalyzer.h"
+#include "JSturdy/DiJetAnalysis/interface/TrackAnalyzer.h"
+#include "JSturdy/DiJetAnalysis/interface/TriggerAnalyzer.h"
 
 
 //
@@ -73,18 +74,7 @@ private:
   // Plots
   TNtuple* ntuple_;      /// Will contain all the selector information we want to keep
   TTree * mAllData;      /// Will contain the additional di-jet specific data
-  TTree * mJetData;
-  TTree * mMETData;
-  TTree * mLeptonData;
-  TTree * mPhotonData;
-  TTree * mHLTData;
-  TTree * mVertexData;
-  TTree * mTriggerData;
-  TTree * mTrackData;
 
-  //TTree * mSelectorData; /// Will contain the information on the selector decisions
-  //TTree* decisionTree_;  ///< Will contain all the decisions for ALL processed events
-  //TTree* selectionTree_; ///< Will contain all the information we want to keep
   float* variables_;     ///< Container for the tree variables (from selectors)
   bool*  decisions_;     ///< Container for all selector decisions
   bool   globalDec_;     ///< Global decision for event
@@ -96,14 +86,10 @@ private:
 
   unsigned int  nEvents_;              // number of events processed
 
-  unsigned int  nWasRun_;              // # where at least one HLT was run
-  unsigned int  nAccept_;              // # of accepted events
-  unsigned int  nErrors_;              // # where at least one HLT had error
-  std::vector<unsigned int> hlWasRun_; // # where HLT[i] was run
-  std::vector<unsigned int> hlAccept_; // # of events accepted by HLT[i]
-  std::vector<unsigned int> hlErrors_; // # of events with error in HLT[i]
   bool init_;                          // vectors initialised or not
 
+  int debug_;
+  
   std::string outputFileName_;
 
   double localPi;
@@ -112,10 +98,11 @@ private:
   JetAnalyzer        * jetinfo;
   METAnalyzer        * metinfo;
   //HemisphereAnalyzer * heminfo;
+  PhotonAnalyzer     * photons;
   LeptonAnalyzer     * leptons;
   VertexAnalyzer     * vertex;
-  //TrackAnalyzer      * tracks;
-  //TriggerAnalyzer    * triggers;
+  TrackAnalyzer      * tracks;
+  TriggerAnalyzer    * triggers;
 
 };
 #endif

@@ -32,10 +32,9 @@
 //
 class VertexAnalyzer {
  public:
-  VertexAnalyzer(const edm::ParameterSet&);
+  VertexAnalyzer(const edm::ParameterSet&, TTree*);
   ~VertexAnalyzer();
   
- private:
   //*** CMSSW interface
   /// Called once per job, at start
   void beginJob(const edm::EventSetup&) ;
@@ -48,9 +47,10 @@ class VertexAnalyzer {
   //*** Plotting
   /// Define all plots
   void initTuple();
-  void bookHealthPlots();
+  //void bookHealthPlots();
   /// Fill all plots for an event
-  void fillTuple(){mVertexData->Fill(); }
+  //void fillTuple(){mVertexData->Fill(); }
+  //void fillTuple( ) {mAllData->Fill(); }
   //void fillHealthPlots(){mVertexData->Fill(); }
 
 
@@ -61,13 +61,15 @@ class VertexAnalyzer {
   edm::ParameterSet vertexParams;
   edm::InputTag vtxTag_;
   double _minNVtx, _minVtxTrks, _minVtxNdof, _maxVtxChi2, _maxVtxZ;   /// for primary vertex selection
+  int    debug_;
   //
   
   // Counters
   unsigned int nrEventTotalRaw_;          ///< Raw number of events (+1 at each event)
     
   // Plots
-  TTree * mVertexData;
+  TTree * mVertexData;    //Will contain the data passing the vertex selection
+  //TTree * mAllData;       //Will contain the preselection data
 
   bool   vertexDecision;
   

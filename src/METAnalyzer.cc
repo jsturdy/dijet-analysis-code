@@ -11,7 +11,7 @@
 //
 // Original Author:  Jared Sturdy
 //         Created:  Tue Feb 2 12:11:44 PDT 2010
-// $Id: METAnalyzer.cc,v 1.1 2010/03/11 07:01:10 sturdy Exp $
+// $Id: METAnalyzer.cc,v 1.2 2010/03/29 11:19:36 sturdy Exp $
 //
 //
 #include "JSturdy/DiJetAnalysis/interface/METAnalyzer.h"
@@ -19,25 +19,30 @@
 #include <TMath.h>
 
 //________________________________________________________________________________________
-METAnalyzer::METAnalyzer(const edm::ParameterSet& iConfig)
+METAnalyzer::METAnalyzer(const edm::ParameterSet& pset, TTree* tmpAllData)
 { 
+  metParams = pset;
+  mMETData = tmpAllData;
 
   _doMCData  = true;
   _doCaloMET = true;
   _doPfMET   = true;
   _doTcMET   = true;
-  
-  // get the data tags
-  if (iConfig.exists("doMC"))      _doMCData  = iConfig.getParameter<bool>("doMC");
-  if (iConfig.exists("doCaloMET")) _doCaloMET = iConfig.getParameter<bool>("doCaloMET");
-  if (iConfig.exists("doPfMET"))   _doPfMET   = iConfig.getParameter<bool>("doPfMET");
-  if (iConfig.exists("doTcMET"))   _doTcMET   = iConfig.getParameter<bool>("doTcMET");
+  debug_     = 0;
 
-  if (_doMCData)  genTag_   = iConfig.getParameter<edm::InputTag>("genTag");
-  if (_doCaloMET) metTag_   = iConfig.getParameter<edm::InputTag>("metTag");
-  if (_doPfMET)   pfmetTag_ = iConfig.getParameter<edm::InputTag>("pfmetTag");
-  if (_doTcMET)   tcmetTag_ = iConfig.getParameter<edm::InputTag>("tcmetTag");
-  //mhtTag_   = iConfig.getParameter<edm::InputTag>("mhtTag");
+  if (metParams.exists("debugMET"))     debug_   = metParams.getUntrackedParameter<int>("debugMET");
+
+  // get the data tags
+  if (metParams.exists("doMCMET"))   _doMCData  = metParams.getUntrackedParameter<bool>("doMCMET");
+  if (metParams.exists("doCaloMET")) _doCaloMET = metParams.getUntrackedParameter<bool>("doCaloMET");
+  if (metParams.exists("doPfMET"))   _doPfMET   = metParams.getUntrackedParameter<bool>("doPfMET");
+  if (metParams.exists("doTcMET"))   _doTcMET   = metParams.getUntrackedParameter<bool>("doTcMET");
+
+  if (_doMCData)  genTag_   = metParams.getUntrackedParameter<edm::InputTag>("genMETTag");
+  if (_doCaloMET) metTag_   = metParams.getUntrackedParameter<edm::InputTag>("metTag");
+  if (_doPfMET)   pfmetTag_ = metParams.getUntrackedParameter<edm::InputTag>("pfmetTag");
+  if (_doTcMET)   tcmetTag_ = metParams.getUntrackedParameter<edm::InputTag>("tcmetTag");
+  //mhtTag_   = metParams.getUntrackedParameter<edm::InputTag>("mhtTag");
 
   localPi = acos(-1.0);
 
@@ -58,7 +63,7 @@ METAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   using namespace reco;
   using namespace edm;
 
-  met_result = false;
+  met_result = true;
   edm::LogVerbatim("DiJetEvent::METAnalyzer") << " Start  " << std::endl;
 
   //**********************************
@@ -255,8 +260,8 @@ METAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   // Fill the tree only if all preselection conditions are met
   //if(preselection) //mPreselection->Fill();
-  return met_result;
   //mMETData->Fill();
+  return met_result;
 }
 
 //________________________________________________________________________________________
@@ -278,11 +283,6 @@ METAnalyzer::initTuple() {
 
   std::ostringstream variables; // Container for all variables
   
-  // Register this ntuple
-  edm::Service<TFileService> fs;
-
-  mMETData = fs->make<TTree>( "METData", "data after cuts" );
-  mMETData->SetAutoSave(10);
 
   // Add the branches
   //general MET information
@@ -374,7 +374,7 @@ METAnalyzer::initTuple() {
 //  mMETData->Branch("MPTPx",  &m_MPTPx,  "MPTPx/double");
 //  mMETData->Branch("MPTPy",  &m_MPTPy,  "MPTPy/double");
 //  mMETData->Branch("MPTPz",  &m_MPTPz,  "MPTPz/double");
-    
+  
   edm::LogInfo("DiJetEvent::METAnalyzer") << "MET Ntuple variables " << variables.str();
   
 }

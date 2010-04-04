@@ -13,7 +13,7 @@ Description: Collects variables related to vertices, performs a primary vertex c
 //
 // Original Author:  Jared Sturdy
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: VertexAnalyzer.cc,v 1.2 2010/03/29 10:51:55 sturdy Exp $
+// $Id: VertexAnalyzer.cc,v 1.3 2010/03/29 11:18:22 sturdy Exp $
 //
 //
 
@@ -22,8 +22,9 @@ Description: Collects variables related to vertices, performs a primary vertex c
 #include <sstream>
 
 //________________________________________________________________________________________
-VertexAnalyzer::VertexAnalyzer(const edm::ParameterSet& pset)
+VertexAnalyzer::VertexAnalyzer(const edm::ParameterSet& pset, TTree* tmpAllData)
 { 
+  mVertexData = tmpAllData;
   vertexParams = pset;
   //defaults
   _minNVtx    = 1;    //minimum number of vertices
@@ -31,19 +32,22 @@ VertexAnalyzer::VertexAnalyzer(const edm::ParameterSet& pset)
   _minVtxNdof = 4;    //minimum number of degrees of freedom for the vertex
   _maxVtxChi2 = 2.4;  //max chi2 of vertex is 2.4
   _maxVtxZ    = 15.0; //max z of vertex is 15 cm
+  debug_      = 0;
+
+  if (vertexParams.exists("debugVtx"))     debug_   = vertexParams.getUntrackedParameter<int>("debugVtx");
 
   if (vertexParams.exists("minNVtx"))
-    _minNVtx = vertexParams.getParameter<int>("minNVtx");
+    _minNVtx = vertexParams.getUntrackedParameter<int>("minNVtx");
   if (vertexParams.exists("minVtxTrks"))
-    _minVtxTrks = vertexParams.getParameter<int>("minVtxTrks");
+    _minVtxTrks = vertexParams.getUntrackedParameter<int>("minVtxTrks");
   if (vertexParams.exists("minVtxNdof"))
-    _minVtxNdof = vertexParams.getParameter<int>("minVtxNdof");
+    _minVtxNdof = vertexParams.getUntrackedParameter<int>("minVtxNdof");
   if (vertexParams.exists("maxVtxChi2"))
-    _maxVtxChi2    = vertexParams.getParameter<double>("maxVtxChi2");
+    _maxVtxChi2    = vertexParams.getUntrackedParameter<double>("maxVtxChi2");
   if (vertexParams.exists("maxVtxZ"))
-    _maxVtxZ    = vertexParams.getParameter<double>("maxVtxZ");
+    _maxVtxZ    = vertexParams.getUntrackedParameter<double>("maxVtxZ");
     
-  vtxTag_    = vertexParams.getParameter<edm::InputTag>("vtxTag"); 
+  vtxTag_    = vertexParams.getUntrackedParameter<edm::InputTag>("vtxTag"); 
 
   initTuple();
 }
@@ -77,7 +81,7 @@ VertexAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   } 
 
   int tmpnVtx = (*vertices).size();
-  int nVtx = 0;
+  int numVtx = 0;
   if (tmpnVtx > 10) tmpnVtx = 10;
   for (int i=0; i< tmpnVtx; i++){  
     const reco::Vertex* pVertex = &(*vertices)[i];
@@ -93,22 +97,22 @@ VertexAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       m_VtxdX[i]             = pVertex->xError();
       m_VtxdY[i]             = pVertex->yError();
       m_VtxdZ[i]             = pVertex->zError();
-
+      
       for (Vertex::trackRef_iterator vertex_curTrack = pVertex->tracks_begin(); vertex_curTrack!=pVertex->tracks_end(); vertex_curTrack++) {
 	m_VtxSumTrkPt[i] += (*vertex_curTrack)->pt();
       }
       
-      ++nVtx;
+      ++numVtx;
     }
   } 
-  
-  if(tmpnVtx>=_minNVtx)
-    //if(m_VtxNTrks[0]>=_minVtxTrks)
-    //if(m_VtxSumTrkPt[0]>=_minVtxSumTrkPt)
-    if(m_VtxNdof[0]>=_minVtxNdof)
-      //if(m_VtxChi2[0]<=_maxVtxChi2)
-      if(m_VtxZ[0]<=_maxVtxZ)
-	vertexDecision = true;
+  m_nVtx = numVtx;
+  if (m_nVtx>=_minNVtx)
+    //if (m_VtxNTrks[0]>=_minVtxTrks)
+    //if (m_VtxSumTrkPt[0]>=_minVtxSumTrkPt)
+    if (m_VtxNdof[0]>=_minVtxNdof)
+      if(m_VtxChi2[0]<=_maxVtxChi2)
+	if (m_VtxZ[0]<=_maxVtxZ)
+	  vertexDecision = true;
   
   //mVertexData->Fill();
   return vertexDecision;
@@ -133,12 +137,13 @@ VertexAnalyzer::initTuple() {
   // 1. Event variables
   variables << "weight:process";
   
+  /*
   // Register this ntuple
   edm::Service<TFileService> fs;
 
   mVertexData = fs->make<TTree>( "VertexData", "data after cuts" );
   mVertexData->SetAutoSave(10);
-
+  */
   //other information
 
   mVertexData->Branch("nVtx",                &m_nVtx,            "nVtx/int");
@@ -153,7 +158,21 @@ VertexAnalyzer::initTuple() {
   mVertexData->Branch("VertexdX",m_VtxdX,"VertexdX[nVtx]/double");
   mVertexData->Branch("VertexdY",m_VtxdY,"VertexdY[nVtx]/double");
   mVertexData->Branch("VertexdZ",m_VtxdZ,"VertexdZ[nVtx]/double");
-    
+  
+  /*  
+  mAllData->Branch("nVtx",                &m_nVtx,            "nVtx/int");
+  mAllData->Branch("VertexChi2",          m_VtxChi2,          "VertexChi2[nVtx]/double");
+  mAllData->Branch("VertexNdof",          m_VtxNdof,          "VertexNdof[nVtx]/double");
+  mAllData->Branch("VertexIsValid",       m_VtxIsValid,       "VertexIsValid[nVtx]/double");
+  mAllData->Branch("VertexNormalizedChi2",m_VtxNormalizedChi2,"VertexNormalizedChi2[nVtx]/double");
+
+  mAllData->Branch("VertexX", m_VtxX, "VertexX[nVtx]/double");
+  mAllData->Branch("VertexY", m_VtxY, "VertexY[nVtx]/double");
+  mAllData->Branch("VertexZ", m_VtxZ, "VertexZ[nVtx]/double");
+  mAllData->Branch("VertexdX",m_VtxdX,"VertexdX[nVtx]/double");
+  mAllData->Branch("VertexdY",m_VtxdY,"VertexdY[nVtx]/double");
+  mAllData->Branch("VertexdZ",m_VtxdZ,"VertexdZ[nVtx]/double");
+  */
   edm::LogInfo("VertexAnalyzer") << "Ntuple variables " << variables.str();
   
 }

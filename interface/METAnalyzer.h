@@ -35,10 +35,9 @@
 //
 class METAnalyzer {
  public:
-  METAnalyzer(const edm::ParameterSet&);
+  METAnalyzer(const edm::ParameterSet&, TTree*);
   ~METAnalyzer();
   
- private:
   //*** CMSSW interface
   /// Called once per job, at start
   void beginJob(const edm::EventSetup&) ;
@@ -53,12 +52,14 @@ class METAnalyzer {
   void initTuple();
   //void bookHealthPlots();
   /// Fill all plots for an event
-  void fillTuple( const edm::Event& ) {mMETData->Fill();}
-  //void fillHealthPlots( const edm::Event& ) {mMETData->Fill();}
+  //void fillTuple( ) {mMETData->Fill(); }
+  //void fillTuple( ) {mAllData->Fill();}
+  //void fillHealthPlots( ) {mMETData->Fill();}
   
  private:
   
   // configuration parameters
+  edm::ParameterSet metParams;
   //met tags
   edm::InputTag tcmetTag_;
   edm::InputTag pfmetTag_;
@@ -69,10 +70,11 @@ class METAnalyzer {
   bool _doCaloMET;
   bool _doPfMET;
   bool _doTcMET;
-
+  int  debug_;
   bool met_result;       /// result of the met cut
 
-  TTree * mMETData;      /// Will contain the additional di-jet specific data
+  TTree * mMETData;      /// Will contain the data passing the MET cut
+  //TTree * mAllData;      /// Will contain the preselection data
 
   // Generated MET
   double m_pfMET_Gen[3];

@@ -40,10 +40,9 @@
 //
 class LeptonAnalyzer {
  public:
-  LeptonAnalyzer(const edm::ParameterSet&);
+  LeptonAnalyzer(const edm::ParameterSet&, TTree*);
   ~LeptonAnalyzer();
   
- private:
   //*** CMSSW interface
   /// Called once per job, at start
   void beginJob(const edm::EventSetup&) ;
@@ -57,11 +56,12 @@ class LeptonAnalyzer {
   //*** Plotting
   /// Define all plots
   void initTuple();
-  void bookHealthPlots();
+  //void bookHealthPlots();
   /// Fill all plots for an event
   //void fillPlots( const edm::Event&, const SelectorDecisions& ) {mLeptonData->Fill()};
-  void fillTuple( const edm::Event& ) {mLeptonData->Fill(); }
-  void fillHealthPlots( const edm::Event& ) {mLeptonData->Fill(); }
+  //void fillTuple( ) {mLeptonData->Fill(); }
+  //void fillTuple( ) {mAllData->Fill(); }
+  //void fillHealthPlots( ) {mLeptonData->Fill(); }
   
   
 
@@ -78,19 +78,26 @@ private:
   edm::InputTag ccmuonTag_;
   edm::InputTag pfmuonTag_;
 
+  //edm::InputTag tauTag_;
+  //edm::InputTag cctauTag_;
+  //edm::InputTag pftauTag_;
+
   edm::InputTag genTag_;
 
 
-  double elecMaxEta_, elecMinEt_, elecIso_;  /// for preselection cuts on electrons
-  double muonMaxEta_, muonMinEt_, muonIso_;  /// for preselection cuts on muons
+  double elecMaxEta_, elecMaxEt_, elecMinEt_, elecRelIso_;  /// for preselection cuts on electrons
+  double muonMaxEta_, muonMaxEt_, muonMinEt_, muonRelIso_;  /// for preselection cuts on muons
+  //double tauMaxEta_, tauMaxEt_, tauMinEt_, tauRelIso_;      /// for preselection cuts on taus
   bool   doMCData_;                 /// switch to turn off generator level information
-
+  int    debug_;
     
   // Plots
-  TTree * mLeptonData;      /// Will contain the additional di-jet specific data
+  TTree * mLeptonData;   /// Will contain the lepton data after cuts
 
+  // Variables
   int    m_Nelec;
   int    m_NIsoelec;
+  bool   m_elecVeto;
   double m_ElecEt[50];
   double m_ElecPt[50];
   double m_ElecPx[50];
@@ -120,8 +127,8 @@ private:
   double m_GenElecPy[50];
   double m_GenElecPz[50];
   double m_GenElecPt[50];
-  double m_GenElecE[50];
   double m_GenElecEt[50];
+  double m_GenElecE[50];
 
   double m_ElecCaloEnergy[50];
   double m_ElecHOverE[50];
@@ -148,6 +155,7 @@ private:
   double m_ElecHCalIsoDeposit[50];
 
   int    m_Nmuon;
+  bool   m_muonVeto;
   double m_MuonEt[50];
   double m_MuonPt[50];
   double m_MuonPx[50];
@@ -229,21 +237,29 @@ private:
   int length;
   int genIds[1000];
   int genRefs[1000];
+  int genStatus[1000];
   float genE[1000];
   float genPx[1000];
   float genPy[1000];
   float genPz[1000];
-  int genStatus[1000];
 
   int genLepLength;
   int genLepIds[100];
   int genLepRefs[100];
+  int genLepStatus[100];
   float genLepE[100];
   float genLepPx[100];
   float genLepPy[100];
   float genLepPz[100];
-  int genLepStatus[100];
 
+  int genPhotLength;
+  int genPhotIds[100];
+  int genPhotRefs[100];
+  int genPhotStatus[100];
+  float genPhotE[100];
+  float genPhotPx[100];
+  float genPhotPy[100];
+  float genPhotPz[100];
 
   bool init_;                          // vectors initialised or not
 

@@ -6,15 +6,14 @@
 // 
 /**\class TriggerAnalyzer TriggerAnalyzer.cc JSturdy/DiJetAnalysis/src/TriggerAnalyzer.cc
 
-Description: Variable collector/ntupler for SUSY search with Jets + MET
+Description: Collects the trigger results and performs a basic trigger selection
 
-Implementation:Uses the EventSelector interface for event selection and TFileService for plotting.
 
 */
 //
 // Original Author:  Jared Sturdy (from SusyDiJetAnalysis)
 //         Created:  Mon Feb 18 15:40:44 CET 2008
-// $Id: TriggerAnalyzer.cc,v 1.1 2010/03/11 07:01:15 sturdy Exp $
+// $Id: TriggerAnalyzer.cc,v 1.2 2010/03/29 11:18:22 sturdy Exp $
 //
 //
 //#include "SusyAnalysis/EventSelector/interface/BJetEventSelector.h"
@@ -25,15 +24,21 @@ Implementation:Uses the EventSelector interface for event selection and TFileSer
 #include <sstream>
 
 //________________________________________________________________________________________
-TriggerAnalyzer::TriggerAnalyzer(const edm::ParameterSet& iConfig)
+TriggerAnalyzer::TriggerAnalyzer(const edm::ParameterSet& pset, TTree* tmpAllData)
 { 
 
-  if (iConfig.exists("doMCData"))  doMCData_  = iConfig.getParameter<bool>("doMCData");
+  mTriggerData = tmpAllData;
+  triggerParams = pset;
+
+  debug_ = 0;
+
+  if (triggerParams.exists("debugTriggers"))     debug_   = triggerParams.getUntrackedParameter<int>("debugTriggers");
+  if (triggerParams.exists("doMCTriggers"))  doMCData_  = triggerParams.getUntrackedParameter<bool>("doMCTriggers");
  
   // trigger stuff
-  triggerResults_ = iConfig.getParameter<edm::InputTag>("triggerResults");
+  triggerResults_ = triggerParams.getUntrackedParameter<edm::InputTag>("triggerResults");
   // trigger path names
-  pathNames_ = iConfig.getParameter< std::vector<std::string> >("pathNames");
+  pathNames_ = triggerParams.getUntrackedParameter< std::vector<std::string> >("pathNames");
 
   localPi = acos(-1.0);
 
@@ -59,15 +64,23 @@ TriggerAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   std::ostringstream dbg;
 
-  trigger_result = false;
+  trigger_result = true;
 
   //Trigger results
   edm::LogVerbatim("TriggerEvent") << " Trigger decision  " << std::endl;
 
   //get the trigger decision
-  m_HLT1JET=false;
-  m_HLT2JET=false;
-  m_HLT1MET1HT=false;
+  m_HLT1JET    = false;
+  m_HLT2JET    = false;
+  m_HLT1MET    = false;
+  m_HLT1HT     = false;
+  m_HLT1HT1MHT = false;
+  m_HLT1Muon   = false;
+
+  m_L1Muon1 = false;
+  m_L1Muon2 = false;
+  m_L1Muon3 = false;
+  m_L1Muon4 = false;
 
   // Get the trigger results and check validity
   edm::Handle<edm::TriggerResults> hltHandle;
@@ -91,7 +104,7 @@ TriggerAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // GEORGIA
   if (!hltHandle.isValid()) {
     // triggerExists = false;
-    std::cout << "HLTriggerResult Not Valid!" << endl;
+    std::cout << "HLTriggerResult Not Valid!" << std::endl;
   }
   else {  
     if (hltHandle->wasrun()) nWasRun_++;
@@ -124,7 +137,8 @@ TriggerAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   m_nHLT=static_cast<int>(n);
   for(unsigned int i=0; i!=n; ++i) {
-    m_HLTArray[i]=hltHandle->accept(i);
+    m_HLTArray[i] = hltHandle->accept(i);
+    m_HLTNames[i] = hltHandle->name(i);
   }
 
   //looping over list of trig path names
@@ -140,18 +154,22 @@ TriggerAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if ( hltHandle->accept(index) ) {
       LogDebug("HLTEventSelector") << "Event selected by " << *i ;
       std::string trigName = *i;
-      if (trigName == "HLT_Jet180")      m_HLT1JET=true;
-      if (trigName == "HLT_DiJetAve130") m_HLT2JET=true;
-      if (trigName == "HLT_MET50")       m_HLT1MET1HT=true;
-      if (trigName == "HLT_Mu9")         m_HLT1Muon=true; 
+      //m_HLTNames[i] = trigName;
+
+      if (trigName == "HLT_Jet180")       m_HLT1JET    = true;
+      if (trigName == "HLT_DiJetAve130")  m_HLT2JET    = true;
+      if (trigName == "HLT_MET60")        m_HLT1MET    = true;
+      if (trigName == "HLT_HT200")        m_HLT1HT     = true;
+      if (trigName == "HLT_HT300_MHT100") m_HLT1HT1MHT = true;
+      if (trigName == "HLT_Mu9")          m_HLT1Muon   = true; 
       
     } 
   }
 
   // Fill the tree only if all preselection conditions are met
   //if(preselection) //mPreselection->Fill();
-  return trigger_result;
   //mTriggerData->Fill();
+  return trigger_result;
 }
 
 
@@ -179,34 +197,33 @@ TriggerAnalyzer::printHLTreport( void ) {
 	    << " errors = " << nErrors_
 	    << "\n";
 
-  std::cout << endl;
+  std::cout << std::endl;
   std::cout << "HLT-Report " << "---------- HLTrig Summary ------------\n";
   std::cout << "HLT-Report "
-	    << right << setw(10) << "HLT  Bit#" << " "
-	    << right << setw(10) << "WasRun" << " "
-	    << right << setw(10) << "Passed" << " "
-	    << right << setw(10) << "Errors" << " "
+	    << std::right << std::setw(10) << "HLT  Bit#" << " "
+	    << std::right << std::setw(10) << "WasRun" << " "
+	    << std::right << std::setw(10) << "Passed" << " "
+	    << std::right << std::setw(10) << "Errors" << " "
 	    << "Name" << "\n";
 
   if (init_) {
     for (unsigned int i=0; i!=n; ++i) {
       std::cout << "HLT-Report "
-		<< right << setw(10) << i << " "
-		<< right << setw(10) << hlWasRun_[i] << " "
-		<< right << setw(10) << hlAccept_[i] << " "
-		<< right << setw(10) << hlErrors_[i] << " "
+		<< std::right << std::setw(10) << i << " "
+		<< std::right << std::setw(10) << hlWasRun_[i] << " "
+		<< std::right << std::setw(10) << hlAccept_[i] << " "
+		<< std::right << std::setw(10) << hlErrors_[i] << " "
 		<< pathNames_[i] << "\n";
     }
   } else {
-    std::cout << "HLT-Report - No HL TriggerResults found!" << endl;
+    std::cout << "HLT-Report - No HL TriggerResults found!" << std::endl;
   }
   
-  std::cout << endl;
-  std::cout << "HLT-Report end!" << endl;
-  std::cout << endl;
+  std::cout << std::endl;
+  std::cout << "HLT-Report end!" << std::endl;
+  std::cout << std::endl;
 
 }
-// end GEORGIA
 
 
 //________________________________________________________________________________________
@@ -217,27 +234,23 @@ TriggerAnalyzer::initTuple() {
   
   // 1. Event variables
   variables << "weight:process";
-  
-  // Register this ntuple
-  edm::Service<TFileService> fs;
-
-  // Now we add some additional ones for the dijet analysis
-  //mPreselection = fs->make<TTree>( "Preselection", "data after preselection" );
-  mTriggerData = fs->make<TTree>( "TriggerData", "data after cuts" );
-  mTriggerData->SetAutoSave(10);
-
-  // Add the branches
-  //mTriggerData->Branch("run",   &Run,   "run/int");
-  //mTriggerData->Branch("event", &Event, "event/int");
 
   mTriggerData->Branch("nHLT",    &m_nHLT,     "nHLT/I");
   mTriggerData->Branch("HLTArray", m_HLTArray, "HLTArray[nHLT]/I");
+  mTriggerData->Branch("HLTNames", m_HLTNames, "HLTNames[nHLT]/string");
 
   //Trigger information
   mTriggerData->Branch("HLT1JET",    &m_HLT1JET,    "HLT1JET/bool");
   mTriggerData->Branch("HLT2JET",    &m_HLT2JET,    "HLT2JET/bool");
-  mTriggerData->Branch("HLT1MET1HT", &m_HLT1MET1HT, "HLT1MET1HT/bool");
+  mTriggerData->Branch("HLT1MET",    &m_HLT1MET,    "HLT1MET/bool");
+  mTriggerData->Branch("HLT11HT",    &m_HLT1HT,     "HLT1HT/bool");
+  mTriggerData->Branch("HLT1HT1MHT", &m_HLT1HT1MHT, "HLT1HT1MHT/bool");
   mTriggerData->Branch("HLT1MUON",   &m_HLT1Muon,   "HLT1MUON/bool");
+
+  mTriggerData->Branch("L1MUON1",   &m_L1Muon1,   "L1MUON1/bool");
+  mTriggerData->Branch("L1MUON2",   &m_L1Muon2,   "L1MUON2/bool");
+  mTriggerData->Branch("L1MUON3",   &m_L1Muon3,   "L1MUON3/bool");
+  mTriggerData->Branch("L1MUON4",   &m_L1Muon4,   "L1MUON4/bool");
 
   edm::LogInfo("TriggerEvent") << "Ntuple variables " << variables.str();
   

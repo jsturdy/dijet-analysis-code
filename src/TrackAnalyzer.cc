@@ -13,27 +13,27 @@ Description: Collects variables related to tracks
 //
 // Original Author:  Jared Sturdy (from SusyDiJetAnalysis)
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: TrackAnalyzer.cc,v 1.1 2010/03/11 07:01:36 sturdy Exp $
+// $Id: TrackAnalyzer.cc,v 1.2 2010/03/29 11:18:22 sturdy Exp $
 //
 //
 #include "JSturdy/DiJetAnalysis/interface/TrackAnalyzer.h"
 #include <TMath.h>
 
 //________________________________________________________________________________________
-TrackAnalyzer::TrackAnalyzer(const edm::ParameterSet& iConfig)
+TrackAnalyzer::TrackAnalyzer(const edm::ParameterSet& pset, TTree* tmpAllData)
 { 
-
+  mTrackData = tmpAllData;
+  trackParams = pset;
   doMCData_ = true;
-  if (iConfig.exists("doMCData"))
-    doMCData_  = iConfig.getParameter<bool>("doMCData");
-  if (doMCData_)
-    if (iConfig.exists("genTag"))
-      genTag_  = iConfig.getParameter<edm::InputTag>("genTag");
- 
-  //edm::LogInfo("TrackTest") << "Global event weight set to " << eventWeight_;
-    
-  //jptTag_    = iConfig.getParameter<edm::InputTag>("jptTag");
+  debug_    =0;
 
+  if (trackParams.exists("debugTracks"))     debug_   = trackParams.getUntrackedParameter<int>("debugTracks");
+  if (trackParams.exists("doMCTracks"))
+    doMCData_  = trackParams.getUntrackedParameter<bool>("doMCTracks");
+  if (doMCData_)
+    if (trackParams.exists("trackTag"))
+      trackTag_  = trackParams.getUntrackedParameter<edm::InputTag>("trackTag");
+ 
   localPi = acos(-1.0);
 
   // Initialise plots [should improve in the future]
@@ -53,8 +53,7 @@ TrackAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   using namespace reco;
   using namespace edm;
 
-  track_result = false;
-  //bool preselection = false;
+  track_result = true;
   edm::LogVerbatim("TrackEvent") << " Start  " << std::endl;
 
   std::ostringstream dbg;
@@ -62,10 +61,8 @@ TrackAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   //get tracks
   
-  //    reco::TrackCollection myTracks;
-  // iEvent.getByLabel("generalTracks",myTracks);
   edm::Handle<View<reco::Track> >  myTracks;
-  iEvent.getByLabel("generalTracks",myTracks);
+  iEvent.getByLabel(trackTag_,myTracks);
   double ptMax_ = 500;
   math::XYZTLorentzVector totalP3;
   for(View<reco::Track>::const_iterator elem = myTracks->begin(); 
@@ -88,10 +85,7 @@ TrackAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   m_MPTPz = totalP3.pz();
    
 
-  // Fill the tree only if all preselection conditions are met
-  //if(preselection) //mPreselection->Fill();
   return track_result;
-  //mTrackData->Fill();
 }
 
 //________________________________________________________________________________________
@@ -114,28 +108,12 @@ TrackAnalyzer::initTuple() {
   // 1. Event variables
   variables << "weight:process";
   
-  // Register this ntuple
-  edm::Service<TFileService> fs;
 
-  // Now we add some additional ones for the dijet analysis
-  mTrackData = fs->make<TTree>( "TrackData", "data after cuts" );
-  mTrackData->SetAutoSave(10);
+  mTrackData->Branch("MPTPhi", &m_MPTPhi, "MPTPhi/double");
+  mTrackData->Branch("MPTPx",  &m_MPTPx,  "MPTPx/double");
+  mTrackData->Branch("MPTPy",  &m_MPTPy,  "MPTPy/double");
+  mTrackData->Branch("MPTPz",  &m_MPTPz,  "MPTPz/double");
 
-  //jet correction factors
-  //mTrackData->Branch("Jet_MCcorrFactor",m_JetMCCorrFactor,"m_JetMCCorrFactor[Njets]/double");
-  //mTrackData->Branch("Jet_JPTcorrFactor",m_JetJPTCorrFactor,"m_JetJPTCorrFactor[Njets]/double");
-  
-  mTrackData->Branch("JetTrackPt",m_JetTrackPt,"JetTrackPt[Njets]/double"); 
-  mTrackData->Branch("JetTrackPhi",m_JetTrackPhi,"JetTrackPhi[Njets]/double"); 
-  mTrackData->Branch("JetTrackPhiWeighted",m_JetTrackPhiWeighted,"JetTrackPhiWeighted[Njets]/double"); 
-  mTrackData->Branch("JetTrackNo",m_JetTrackNo,"JetTrackNo[Njets]/int");
-
-  // MPT Markus 
-  mTrackData->Branch("MPTPhi" ,& m_MPTPhi ,"MPTPhi/double");
-  mTrackData->Branch("MPTPx" ,& m_MPTPx ,"MPTPx/double");
-  mTrackData->Branch("MPTPy" ,& m_MPTPy ,"MPTPy/double");
-  mTrackData->Branch("MPTPz" ,& m_MPTPz ,"MPTPz/double");
-    
   edm::LogInfo("TrackEvent") << "Ntuple variables " << variables.str();
   
 }
