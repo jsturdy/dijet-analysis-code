@@ -235,31 +235,22 @@ private:
   int m_MuonPairIndex[2];
 
   int length;
-  int genIds[1000];
-  int genRefs[1000];
-  int genStatus[1000];
-  float genE[1000];
-  float genPx[1000];
-  float genPy[1000];
-  float genPz[1000];
+  int genIds[500];
+  int genRefs[500];
+  int genStatus[500];
+  float genE[500];
+  float genPx[500];
+  float genPy[500];
+  float genPz[500];
 
   int genLepLength;
-  int genLepIds[100];
-  int genLepRefs[100];
-  int genLepStatus[100];
-  float genLepE[100];
-  float genLepPx[100];
-  float genLepPy[100];
-  float genLepPz[100];
-
-  int genPhotLength;
-  int genPhotIds[100];
-  int genPhotRefs[100];
-  int genPhotStatus[100];
-  float genPhotE[100];
-  float genPhotPx[100];
-  float genPhotPy[100];
-  float genPhotPz[100];
+  int genLepIds[500];
+  int genLepRefs[500];
+  int genLepStatus[500];
+  float genLepE[500];
+  float genLepPx[500];
+  float genLepPy[500];
+  float genLepPz[500];
 
   bool init_;                          // vectors initialised or not
 

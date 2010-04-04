@@ -12,7 +12,7 @@ Description: Variable collector/ntupler for SUSY search with Jets + MET
 //
 // Original Author:  Jared Sturdy
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: VertexAnalyzer.cpp,v 1.1 2010/01/29 16:10:31 sturdy Exp $
+// $Id: PhotonAnalyzer.cc,v 1.1 2010/04/04 00:04:01 sturdy Exp $
 //
 //
 
@@ -82,46 +82,46 @@ PhotonAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   std::ostringstream dbg;
   
-  //// GEN INFO do only if running on MC data
-  //if(doMCData_) {
-  //  
-  //  Handle<reco::GenParticleCollection>  genParticles;
-  //  iEvent.getByLabel(genTag_, genParticles);   
-  //  
-  //  int pcount=0;
-  //  for( size_t i = 0; i < genParticles->size(); ++ i ) {
-  //    const reco::Candidate& pCand = (*genParticles)[ i ];
-  //    
-  //    int st = pCand.status();  
-  //    
-  //    if (st==3) {
-  //	int status = 3;
-  //    } else { // store photons of status 1 
-  //	if ( (abs(pCand.pdgId()) == 22) ) {
-  //	  
-  //	  genPhotIds[pcount]    = pCand.pdgId();
-  //	  genPhotStatus[pcount] = pCand.status();
-  //	  genPhotE[pcount]      = pCand.energy();
-  //	  genPhotPx[pcount]     = pCand.px();
-  //	  genPhotPy[pcount]     = pCand.py();
-  //	  genPhotPz[pcount]     = pCand.pz();
-  //	  
-  //	  if (pCand.numberOfMothers() > 0 ) { 
-  //	    const reco::Candidate * mom = pCand.mother();
-  //	    while (mom->pdgId() == pCand.pdgId()) { mom = mom->mother(); }
-  //	    
-  //	    for( size_t j = 0; j < i; ++ j ) {
-  //	      const Candidate * ref = &((*genParticles)[j]);
-  //	      if (ref == mom) { genPhotRefs[pcount] = ref->pdgId(); }
-  //	      //if (ref == mom) { genPhotRefs[pcount] = j; }
-  //	    }  
-  //	  } else { genPhotRefs[pcount]=-999;}
-  //	  pcount++;
-  //	}
-  //    }
-  //  }
-  //  genPhotLength = pcount;
-  //}
+  // GEN INFO do only if running on MC data
+  if(doMCData_) {
+    
+    Handle<reco::GenParticleCollection>  genParticles;
+    iEvent.getByLabel(genTag_, genParticles);   
+    
+    int pcount=0;
+    for( size_t i = 0; i < genParticles->size(); ++ i ) {
+      const reco::Candidate& pCand = (*genParticles)[ i ];
+      
+      int st = pCand.status();  
+      
+      if (st==3) {
+  	int status = 3;
+      } else { // store photons of status 1 
+  	if ( (abs(pCand.pdgId()) == 22) ) {
+  	  
+  	  genPhotIds[pcount]    = pCand.pdgId();
+  	  genPhotStatus[pcount] = pCand.status();
+  	  genPhotE[pcount]      = pCand.energy();
+  	  genPhotPx[pcount]     = pCand.px();
+  	  genPhotPy[pcount]     = pCand.py();
+  	  genPhotPz[pcount]     = pCand.pz();
+  	  
+  	  if (pCand.numberOfMothers() > 0 ) { 
+  	    const reco::Candidate * mom = pCand.mother();
+  	    while (mom->pdgId() == pCand.pdgId()) { mom = mom->mother(); }
+  	    
+  	    for( size_t j = 0; j < i; ++ j ) {
+  	      const Candidate * ref = &((*genParticles)[j]);
+  	      if (ref == mom) { genPhotRefs[pcount] = ref->pdgId(); }
+  	      //if (ref == mom) { genPhotRefs[pcount] = j; }
+  	    }  
+  	  } else { genPhotRefs[pcount]=-999;}
+  	  pcount++;
+  	}
+      }
+    }
+    genPhotLength = pcount;
+  }
   
 
   /*
@@ -272,14 +272,14 @@ PhotonAnalyzer::initTuple() {
     mPhotonData->Branch("PhotGenEt",     m_GenPhotEt,     "PhotGenEt[PhotN]/double");
     mPhotonData->Branch("PhotGenE",      m_GenPhotE,      "PhotGenE[PhotN]/double");
     //from genParticles
-    //mPhotonData->Branch("genPhotN",     &genPhotLength, "genPhotN/int");
-    //mPhotonData->Branch("genPhotId",     genPhotIds,    "genPhotIds[genPhotN]/int");
-    //mPhotonData->Branch("genPhotMother", genPhotRefs,   "genPhotRefs[genPhotN]/int");
-    //mPhotonData->Branch("genPhotStatus", genPhotStatus, "genPhotStatus[genPhotN]/int");
-    //mPhotonData->Branch("genPhotE",      genPhotE,      "genPhotE[genPhotN]/float");
-    //mPhotonData->Branch("genPhotPx",     genPhotPx,     "genPhotPx[genPhotN]/float");
-    //mPhotonData->Branch("genPhotPy",     genPhotPy,     "genPhotPy[genPhotN]/float");
-    //mPhotonData->Branch("genPhotPz",     genPhotPz,     "genPhotPz[genPhotN]/float");
+    mPhotonData->Branch("genPhotN",     &genPhotLength, "genPhotN/int");
+    mPhotonData->Branch("genPhotId",     genPhotIds,    "genPhotIds[genPhotN]/int");
+    mPhotonData->Branch("genPhotMother", genPhotRefs,   "genPhotRefs[genPhotN]/int");
+    mPhotonData->Branch("genPhotStatus", genPhotStatus, "genPhotStatus[genPhotN]/int");
+    mPhotonData->Branch("genPhotE",      genPhotE,      "genPhotE[genPhotN]/float");
+    mPhotonData->Branch("genPhotPx",     genPhotPx,     "genPhotPx[genPhotN]/float");
+    mPhotonData->Branch("genPhotPy",     genPhotPy,     "genPhotPy[genPhotN]/float");
+    mPhotonData->Branch("genPhotPz",     genPhotPz,     "genPhotPz[genPhotN]/float");
 
   }
 

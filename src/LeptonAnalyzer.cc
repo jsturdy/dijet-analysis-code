@@ -12,7 +12,7 @@ Description: Variable collector/ntupler for SUSY search with Jets + MET
 //
 // Original Author:  Jared Sturdy
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: LeptonAnalyzer.cc,v 1.2 2010/03/29 11:19:36 sturdy Exp $
+// $Id: LeptonAnalyzer.cc,v 1.3 2010/04/04 00:04:01 sturdy Exp $
 //
 //
 
@@ -124,8 +124,8 @@ LeptonAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     Handle<reco::GenParticleCollection>  genParticles;
     iEvent.getByLabel(genTag_, genParticles);   
     
-    int count=0; int lcount=0; ; int pcount=0; // int tcount=0;
-    printf("Status   genpart/%d   PdgId   genE   genPx   genPy   genPz   genMother\n",genParticles->size());
+    int count=0; int lcount=0;  // int tcount=0;
+    if (debug_>1) printf("Status   genpart/%d   PdgId   genE   genPx   genPy   genPz   genMother\n",genParticles->size());
     for( size_t i = 0; i < genParticles->size(); ++ i ) {
       const reco::Candidate& pCand = (*genParticles)[ i ];
 
@@ -155,8 +155,7 @@ LeptonAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	++count;
       }
       else { // store also electrons or muons of status 1 
-	//if ( (abs(pCand.pdgId()) == 11) || (abs(pCand.pdgId()) == 13) ) {
-	if ( (abs(pCand.pdgId()) == 11) || (abs(pCand.pdgId()) == 13) || (abs(pCand.pdgId()) == 22) ) {
+	if ( (abs(pCand.pdgId()) == 11) || (abs(pCand.pdgId()) == 13) ) {
 	  
 	  genLepIds[lcount]    = pCand.pdgId();
 	  genLepStatus[lcount] = pCand.status();
@@ -179,57 +178,10 @@ LeptonAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		 genLepStatus[lcount],lcount,genLepIds[lcount],genLepE[lcount],genLepPx[lcount],genLepPy[lcount],genLepPz[lcount],genLepRefs[lcount]);
 	  ++lcount;
 	}
-	//if ( (abs(pCand.pdgId()) == 22) ) {
-	//  //  
-	//  genPhotIds[pcount]    = pCand.pdgId();
-	//  genPhotStatus[pcount] = pCand.status();
-	//  genPhotE[pcount]      = pCand.energy();
-	//  genPhotPx[pcount]     = pCand.px();
-	//  genPhotPy[pcount]     = pCand.py();
-	//  genPhotPz[pcount]     = pCand.pz();
-	//  
-	//  if (pCand.numberOfMothers() > 0 ) { 
-	//    const reco::Candidate * mom = pCand.mother();
-	//    while (mom->pdgId() == pCand.pdgId()) { mom = mom->mother(); }
-	//    
-	//    for( size_t j = 0; j < i; ++ j ) {
-	//      const reco::Candidate * ref = &((*genParticles)[j]);
-	//      if (ref == mom) { genPhotRefs[pcount] = ref->pdgId(); }
-	//      //if (ref == mom) { genPhotRefs[pcount] = j; }
-	//    }  
-	//  } else { genPhotRefs[pcount]=-999;}
-	//  if (debug_>1)printf("%2d         %4d         %4d         %4.2f       %4.2f    %4.2f    %4.2f     %4d\n", \
-	//	 genPhotStatus[pcount],pcount,genPhotIds[pcount],genPhotE[pcount],genPhotPx[pcount],genPhotPy[pcount],genPhotPz[pcount],genPhotRefs[pcount]);
-	//  ++pcount;
-	//  /*
-	//  //  genPhotIds[pcount]    = pCand.pdgId();
-	//  //  genPhotStatus[pcount] = pCand.status();
-	//  //  genPhotE[pcount]      = pCand.energy();
-	//  //  genPhotPx[pcount]     = pCand.px();
-	//  //  genPhotPy[pcount]     = pCand.py();
-	//  //  genPhotPz[pcount]     = pCand.pz();
-	//  //  
-	//  //  if (pCand.numberOfMothers() > 0 ) { 
-	//  //    const reco::Candidate * mom = pCand.mother();
-	//  //    while (mom->pdgId() == pCand.pdgId()) { mom = mom->mother(); }
-	//  //    
-	//  //    for( size_t j = 0; j < i; ++ j ) {
-	//  //      const Candidate * ref = &((*genParticles)[j]);
-	//  //      if (ref == mom) { genPhotRefs[pcount] = ref->pdgId(); }
-	//  //      //if (ref == mom) { genPhotRefs[pcount] = j; }
-	//  //    }  
-	//  //  } else { genPhotRefs[pcount]=-999;}
-	//  //  pcount++;
-	//  //  printf("%2d         2.2f       %2.2f       %2.2f       %2.2f    %2.2f    %2.2f     %2.2f", \
-	//  //	 pcount,genIds[pcount],genStatus[pcount],genE[pcount],genPx[pcount],genPy[pcount],genPz[pcount],genMother[pcount]);
-	//  //}
-	//  */
-	//}
       }
     }
     length = count;
     genLepLength = lcount;
-    //genPhotLength = pcount;
   }
   
   /*
@@ -744,16 +696,6 @@ LeptonAnalyzer::initTuple() {
     mLeptonData->Branch("genLepPx",     genLepPx,     "genLepPx[genLepN]/float");
     mLeptonData->Branch("genLepPy",     genLepPy,     "genLepPy[genLepN]/float");
     mLeptonData->Branch("genLepPz",     genLepPz,     "genLepPz[genLepN]/float");
-
-    ////generator photon status 1
-    //mLeptonData->Branch("genPhotN",     &genPhotLength, "genPhotN/int");
-    //mLeptonData->Branch("genPhotId",     genPhotIds,    "genPhotIds[genPhotN]/int");
-    //mLeptonData->Branch("genPhotMother", genPhotRefs,   "genPhotRefs[genPhotN]/int");
-    //mLeptonData->Branch("genPhotStatus", genPhotStatus, "genPhotStatus[genPhotN]/int");
-    //mLeptonData->Branch("genPhotE",      genPhotE,      "genPhotE[genPhotN]/float");
-    //mLeptonData->Branch("genPhotPx",     genPhotPx,     "genPhotPx[genPhotN]/float");
-    //mLeptonData->Branch("genPhotPy",     genPhotPy,     "genPhotPy[genPhotN]/float");
-    //mLeptonData->Branch("genPhotPz",     genPhotPz,     "genPhotPz[genPhotN]/float");
 
     //mLeptonData->Branch("AlpPtScale", &m_AlpPtScale,"AlpPtScale/double");
     //mLeptonData->Branch("AlpIdTest", &m_AlpIdTest ,"AlpIdTest/int");

@@ -114,13 +114,13 @@ private:
   //
 
   int genPhotLength;
-  int genPhotIds[100];
-  int genPhotRefs[100];
-  int genPhotStatus[100];
-  float genPhotE[100];
-  float genPhotPx[100];
-  float genPhotPy[100];
-  float genPhotPz[100];
+  int genPhotIds[500];
+  int genPhotRefs[500];
+  int genPhotStatus[500];
+  float genPhotE[500];
+  float genPhotPx[500];
+  float genPhotPy[500];
+  float genPhotPz[500];
 
 
   bool init_;                          // vectors initialised or not
