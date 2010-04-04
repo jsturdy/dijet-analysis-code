@@ -25,7 +25,7 @@ jetAnalyzer = cms.untracked.PSet(
     trackJetTag  = cms.untracked.InputTag("cleanLayer1JetsAK5Track"),
 
     #htTag        = cms.InputTag("htTag"),
-    #mhtTag       = cms.InputTag("mhtTag"),
+    #mhtTag       = cms.InputTag("layer1MHTsAK5"),
 
     debugJets = cms.untracked.int32(0)
 
