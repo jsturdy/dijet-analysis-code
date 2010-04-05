@@ -43,7 +43,7 @@ public:
 private:
   //*** CMSSW interface
   /// Called once per job, at start
-  virtual void beginJob(const edm::EventSetup&) ;
+  virtual void beginJob() ;
   /// Called for each event
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   /// Called once per job, at end
@@ -89,6 +89,15 @@ private:
   bool init_;                          // vectors initialised or not
 
   int debug_;
+
+  int passJets[2];
+  int passMET[2];
+  int passLeptons[2];
+  int passPhotons[2];
+  int passVertex[2];
+  int passTracks[2];
+  int passTriggers[2];
+  //int passHemispheres[2];
   
   std::string outputFileName_;
 

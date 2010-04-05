@@ -14,7 +14,7 @@ Description: Collects variables related to jets, performs dijet preselection
 //
 // Original Author:  Jared Sturdy
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: JetAnalyzer.cc,v 1.2 2010/03/29 11:19:36 sturdy Exp $
+// $Id: JetAnalyzer.cc,v 1.3 2010/04/04 00:04:01 sturdy Exp $
 //
 //
 
@@ -33,14 +33,14 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& pset, TTree* tmpAllData)
   useJPTJets_   = true;
   useCaloJets_  = true;
   useTrackJets_ = true;
-  doMCData_     = true;
+  doMCData_     = false;
   debug_        = 0;
   // Preselection parameters
   //Basic jet information, minimum number, eta and pt requirement for all jets
   minNJets_  = 1;
-  jetMaxEta_ = 3.0;
-  jetMinPt_  = 30;
-  jetMaxEMF_ = 0.95;
+  jetMaxEta_ = 5.0;
+  jetMinPt_  = 30.;
+  jetMaxEMF_ = 0.99;
   jetMinEMF_ = 0.0;
   if (jetParams.exists("debugJets"))     debug_   = jetParams.getUntrackedParameter<int>("debugJets");
   //if (jetParams.exists("minNJets"))  minNJets_  = jetParams.getUntrackedParameter<int>("minNJets");
@@ -53,10 +53,10 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& pset, TTree* tmpAllData)
   //}
 
   //Individual jet requirements
-  if (jetParams.exists("selJetMaxEta")) selJetMaxEta_ = jetParams.getUntrackedParameter<std::vector<double > >("selJetMaxEta");
-  if (jetParams.exists("selJetMinPt"))  selJetMinPt_  = jetParams.getUntrackedParameter<std::vector<double > >("selJetMinPt");
-  if (jetParams.exists("selJetMaxEMF")) selJetMaxEMF_ = jetParams.getUntrackedParameter<std::vector<double > >("selJetMaxEMF");
-  if (jetParams.exists("selJetMinEMF")) selJetMinEMF_ = jetParams.getUntrackedParameter<std::vector<double > >("selJetMinEMF");
+  selJetMaxEta_ = jetParams.getUntrackedParameter<std::vector<double > >("selJetMaxEta");
+  selJetMinPt_  = jetParams.getUntrackedParameter<std::vector<double > >("selJetMinPt");
+  selJetMaxEMF_ = jetParams.getUntrackedParameter<std::vector<double > >("selJetMaxEMF");
+  selJetMinEMF_ = jetParams.getUntrackedParameter<std::vector<double > >("selJetMinEMF");
   if (debug_) {
     std::cout<<"size of dijet vector "<<selJetMaxEta_.size()<<std::endl;
     for (int nj = 0; nj < selJetMaxEta_.size(); ++nj) {
@@ -80,7 +80,7 @@ JetAnalyzer::JetAnalyzer(const edm::ParameterSet& pset, TTree* tmpAllData)
   if (useTrackJets_) trackJetTag_ = jetParams.getUntrackedParameter<edm::InputTag>("trackJetTag");
   //If possible to retrieve these values rather than calculate them myself
   //htTag_     = jetParams.getUntrackedParameter<edm::InputTag>("htTag");
-  //mhtTag_    = jetParams.getUntrackedParameter<edm::InputTag>("mhtTag");
+  mhtTag_    = jetParams.getUntrackedParameter<edm::InputTag>("mhtTag");
 
 
   localPi = acos(-1.0);
@@ -579,7 +579,7 @@ JetAnalyzer::matchJetsByCaloTowers( const pat::Jet& jet1,
 
 //________________________________________________________________________________________
 void 
-JetAnalyzer::beginJob(const edm::EventSetup&) {}
+JetAnalyzer::beginJob() {}
 
 //________________________________________________________________________________________
 void 

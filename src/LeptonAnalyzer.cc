@@ -12,7 +12,7 @@ Description: Variable collector/ntupler for SUSY search with Jets + MET
 //
 // Original Author:  Jared Sturdy
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: LeptonAnalyzer.cc,v 1.3 2010/04/04 00:04:01 sturdy Exp $
+// $Id: LeptonAnalyzer.cc,v 1.4 2010/04/04 02:37:18 sturdy Exp $
 //
 //
 
@@ -507,7 +507,7 @@ LeptonAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 //________________________________________________________________________________________
 void 
-LeptonAnalyzer::beginJob(const edm::EventSetup&) {}
+LeptonAnalyzer::beginJob() {}
 
 //________________________________________________________________________________________
 void 

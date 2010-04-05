@@ -13,7 +13,7 @@ Description: Collects variables related to tracks
 //
 // Original Author:  Jared Sturdy (from SusyDiJetAnalysis)
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: TrackAnalyzer.cc,v 1.2 2010/03/29 11:18:22 sturdy Exp $
+// $Id: TrackAnalyzer.cc,v 1.3 2010/04/04 00:04:01 sturdy Exp $
 //
 //
 #include "JSturdy/DiJetAnalysis/interface/TrackAnalyzer.h"
@@ -90,7 +90,7 @@ TrackAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 //________________________________________________________________________________________
 void 
-TrackAnalyzer::beginJob(const edm::EventSetup&) {}
+TrackAnalyzer::beginJob() {}
 
 //________________________________________________________________________________________
 void 

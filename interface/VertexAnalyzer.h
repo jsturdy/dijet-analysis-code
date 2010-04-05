@@ -37,7 +37,7 @@ class VertexAnalyzer {
   
   //*** CMSSW interface
   /// Called once per job, at start
-  void beginJob(const edm::EventSetup&) ;
+  void beginJob();
   /// Called for each event
   //virtual void analyze(const edm::Event&, const edm::EventSetup&);
   bool filter(const edm::Event& evt,const edm::EventSetup& iSetup );

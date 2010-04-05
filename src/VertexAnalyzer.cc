@@ -13,7 +13,7 @@ Description: Collects variables related to vertices, performs a primary vertex c
 //
 // Original Author:  Jared Sturdy
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: VertexAnalyzer.cc,v 1.3 2010/03/29 11:18:22 sturdy Exp $
+// $Id: VertexAnalyzer.cc,v 1.4 2010/04/04 00:04:02 sturdy Exp $
 //
 //
 
@@ -120,7 +120,7 @@ VertexAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 //________________________________________________________________________________________
 void 
-VertexAnalyzer::beginJob(const edm::EventSetup&) {}
+VertexAnalyzer::beginJob() {}
 
 //________________________________________________________________________________________
 void 

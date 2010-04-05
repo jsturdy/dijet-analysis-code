@@ -13,7 +13,7 @@ Description: Collects the trigger results and performs a basic trigger selection
 //
 // Original Author:  Jared Sturdy (from SusyDiJetAnalysis)
 //         Created:  Mon Feb 18 15:40:44 CET 2008
-// $Id: TriggerAnalyzer.cc,v 1.2 2010/03/29 11:18:22 sturdy Exp $
+// $Id: TriggerAnalyzer.cc,v 1.3 2010/04/04 00:04:01 sturdy Exp $
 //
 //
 //#include "SusyAnalysis/EventSelector/interface/BJetEventSelector.h"
@@ -175,7 +175,7 @@ TriggerAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 //________________________________________________________________________________________
 void 
-TriggerAnalyzer::beginJob(const edm::EventSetup&) {}
+TriggerAnalyzer::beginJob() {}
 
 //________________________________________________________________________________________
 void 

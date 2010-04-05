@@ -45,7 +45,7 @@ class JetAnalyzer {
   
   //*** CMSSW interface
   /// Called once per job, at start
-  void beginJob(const edm::EventSetup&) ;
+  void beginJob();
   /// Called for each event
   bool filter(const edm::Event&, const edm::EventSetup&);
   /// Called once per job, at end

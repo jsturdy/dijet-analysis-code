@@ -12,7 +12,7 @@ Description: Variable collector/ntupler for SUSY search with Jets + MET
 //
 // Original Author:  Jared Sturdy
 //         Created:  Fri Jan 29 16:10:31 PDT 2010
-// $Id: PhotonAnalyzer.cc,v 1.1 2010/04/04 00:04:01 sturdy Exp $
+// $Id: PhotonAnalyzer.cc,v 1.2 2010/04/04 02:37:24 sturdy Exp $
 //
 //
 
@@ -221,7 +221,7 @@ PhotonAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 //________________________________________________________________________________________
 void 
-PhotonAnalyzer::beginJob(const edm::EventSetup&) {}
+PhotonAnalyzer::beginJob() {}
 
 //________________________________________________________________________________________
 void 

@@ -11,7 +11,7 @@
 //
 // Original Author:  Jared Sturdy
 //         Created:  Tue Feb 2 12:11:44 PDT 2010
-// $Id: METAnalyzer.cc,v 1.2 2010/03/29 11:19:36 sturdy Exp $
+// $Id: METAnalyzer.cc,v 1.3 2010/04/04 00:04:01 sturdy Exp $
 //
 //
 #include "JSturdy/DiJetAnalysis/interface/METAnalyzer.h"
@@ -268,7 +268,7 @@ METAnalyzer::filter(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 //________________________________________________________________________________________
 void 
-METAnalyzer::beginJob(const edm::EventSetup&) {}
+METAnalyzer::beginJob() {}
 
 //________________________________________________________________________________________
 void 
