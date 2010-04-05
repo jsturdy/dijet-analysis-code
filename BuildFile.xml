@@ -21,3 +21,4 @@
 <use   name="root"/>
 <use   name="rootrflx"/>
 <flags CXXFLAGS="-O0 -g3 -fno-inline"/>
+<flags EDM_PLUGIN="1"/>
